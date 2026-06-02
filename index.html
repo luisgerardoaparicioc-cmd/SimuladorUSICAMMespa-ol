@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Español Fase 6 - Nueva Escuela Mexicana</title>
+  <style>
+    :root{
+      --azul:#c8d8ea;
+      --azul2:#9fb8d1;
+      --borde:#c8ced6;
+      --texto:#1f2933;
+      --fondo:#f4f6f8;
+      --gris:#f8fafc;
+      --verde:#0f766e;
+      --verde-bg:#e6fffa;
+      --rojo:#b42318;
+      --rojo-bg:#fff1f0;
+      --amarillo:#fff7db;
+      --guinda:#7a1234;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#eef3f8 0%,#f7f7f7 100%);
+      color:var(--texto);
+      min-height:100vh;
+    }
+    .app{
+      max-width:1180px;
+      margin:0 auto;
+      padding:18px;
+    }
+    .screen{
+      display:none;
+      min-height:calc(100vh - 36px);
+    }
+    .active{display:block}
+    .card{
+      background:white;
+      border:1px solid var(--borde);
+      border-radius:14px;
+      box-shadow:0 10px 28px rgba(15,23,42,.08);
+      overflow:hidden;
+      position:relative;
+    }
+    .watermark::after{
+      content:"ESPAÑOL FASE 6";
+      position:absolute;
+      inset:auto 0 34% 0;
+      text-align:center;
+      font-size:64px;
+      font-weight:800;
+      letter-spacing:4px;
+      color:rgba(122,18,52,.055);
+      transform:rotate(-3deg);
+      pointer-events:none;
+      white-space:nowrap;
+    }
+    .header{
+      background:var(--azul);
+      border-bottom:1px solid var(--borde);
+      padding:18px 22px;
+      text-align:center;
+    }
+    .header h1{
+      margin:0;
+      font-size:25px;
+      letter-spacing:.5px;
+      color:#111827;
+    }
+    .header p{
+      margin:7px 0 0;
+      font-size:14px;
+      color:#374151;
+    }
+    .start-body{
+      padding:28px;
+      display:grid;
+      grid-template-columns:1.3fr .9fr;
+      gap:20px;
+      align-items:stretch;
+    }
+    .intro-box{
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:20px;
+      background:#fff;
+      line-height:1.55;
+      z-index:1;
+    }
+    .intro-box h2{margin:0 0 10px;font-size:20px;color:var(--guinda)}
+    .teacher-box{
+      border:1px solid var(--borde);
+      border-radius:12px;
+      background:var(--gris);
+      padding:20px;
+      z-index:1;
+    }
+    label{font-weight:bold;display:block;margin-bottom:8px}
+    input[type="text"]{
+      width:100%;
+      padding:13px 14px;
+      border:1px solid #aeb7c2;
+      border-radius:10px;
+      font-size:16px;
+      outline:none;
+      background:white;
+    }
+    input[type="text"]:focus{
+      border-color:var(--azul2);
+      box-shadow:0 0 0 4px rgba(159,184,209,.35);
+    }
+    .btn{
+      border:0;
+      border-radius:10px;
+      padding:12px 18px;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:.18s ease;
+      background:#1f4f7a;
+      color:white;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .btn:hover{filter:brightness(.95);transform:translateY(-1px)}
+    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    .btn-secondary{background:#475569}
+    .btn-success{background:var(--verde)}
+    .btn-danger{background:var(--guinda)}
+    .btn-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 18px;
+      border-top:1px solid var(--borde);
+      background:#fafafa;
+      position:relative;
+      z-index:1;
+    }
+    .credits{
+      font-size:11px;
+      color:#4b5563;
+      text-align:center;
+      padding:8px 0 0;
+    }
+    .quiz-top{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .teacher-name{
+      font-size:14px;
+      color:#374151;
+    }
+    .progress-box{
+      min-width:240px;
+      text-align:right;
+      font-size:14px;
+      color:#374151;
+    }
+    .bar{
+      height:9px;
+      background:#e5e7eb;
+      border-radius:99px;
+      overflow:hidden;
+      margin-top:6px;
+    }
+    .bar span{
+      display:block;
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#1f4f7a,#7a1234);
+      transition:.25s ease;
+    }
+    .exam-card{
+      border:1px solid var(--borde);
+      background:white;
+      border-radius:4px;
+      min-height:570px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 8px 22px rgba(15,23,42,.07);
+    }
+    .exam-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      min-height:520px;
+      position:relative;
+      z-index:1;
+    }
+    .panel{
+      border-right:1px solid var(--borde);
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .panel:last-child{border-right:0}
+    .panel-title{
+      background:var(--azul);
+      border-bottom:1px solid var(--borde);
+      min-height:58px;
+      display:flex;
+      align-items:center;
+      padding:0 28px;
+      font-size:21px;
+      font-weight:800;
+      color:#111827;
+    }
+    .panel-title.center{justify-content:center;letter-spacing:.8px}
+    .question-body{
+      padding:28px;
+      line-height:1.68;
+      font-size:16px;
+    }
+    .case-text{font-weight:500;text-align:justify}
+    .instruction{
+      margin-top:34px;
+      font-weight:bold;
+    }
+    .meta{
+      margin-top:22px;
+      padding:12px 14px;
+      background:#f8fafc;
+      border-left:4px solid var(--azul2);
+      border-radius:8px;
+      font-size:13px;
+      color:#475569;
+    }
+    .options{
+      padding:26px 20px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .option{
+      border:1px solid #d7dce3;
+      border-radius:8px;
+      padding:15px 16px 15px 46px;
+      background:white;
+      position:relative;
+      line-height:1.45;
+      min-height:62px;
+      cursor:pointer;
+      transition:.15s ease;
+      font-size:15px;
+    }
+    .option:hover{background:#f8fafc;border-color:#aeb7c2}
+    .option input{
+      position:absolute;
+      left:17px;
+      top:18px;
+      transform:scale(1.08);
+      cursor:pointer;
+    }
+    .option.correct{
+      border-color:#14b8a6;
+      background:var(--verde-bg);
+    }
+    .option.incorrect{
+      border-color:#f04438;
+      background:var(--rojo-bg);
+    }
+    .feedback{
+      margin:0 20px 22px;
+      padding:16px;
+      border-radius:10px;
+      border:1px solid transparent;
+      line-height:1.55;
+      font-size:14px;
+      display:none;
+    }
+    .feedback.show{display:block}
+    .feedback.good{
+      background:var(--verde-bg);
+      border-color:#99f6e4;
+      color:#134e4a;
+    }
+    .feedback.bad{
+      background:var(--rojo-bg);
+      border-color:#fecaca;
+      color:#7f1d1d;
+    }
+    .feedback strong{display:block;margin-bottom:6px}
+    .source-note{
+      margin-top:8px;
+      font-size:12px;
+      color:#52525b;
+      border-top:1px dashed rgba(0,0,0,.15);
+      padding-top:8px;
+    }
+    .result-body{
+      padding:26px;
+      position:relative;
+      z-index:1;
+    }
+    .result-score{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin:16px 0 22px;
+    }
+    .stat{
+      background:#f8fafc;
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:16px;
+      text-align:center;
+    }
+    .stat b{display:block;font-size:30px;color:var(--guinda)}
+    .review-item{
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      padding:14px;
+      margin:10px 0;
+      background:#fff;
+    }
+    .review-item.ok{border-left:5px solid var(--verde)}
+    .review-item.fail{border-left:5px solid var(--rojo)}
+    .review-item h3{font-size:15px;margin:0 0 7px}
+
+    .summary-table{width:100%;border-collapse:collapse;margin:12px 0 18px;background:white}
+    .summary-table th,.summary-table td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left;font-size:13px}
+    .summary-table th{background:#f3f4f6;color:#111827}
+    .small{font-size:12px;color:#6b7280}
+    .hide{display:none!important}
+    @media (max-width:820px){
+      .app{padding:10px}
+      .start-body{grid-template-columns:1fr;padding:18px}
+      .quiz-top{grid-template-columns:1fr}
+      .progress-box{text-align:left;min-width:0}
+      .exam-grid{grid-template-columns:1fr}
+      .panel{border-right:0;border-bottom:1px solid var(--borde)}
+      .panel:last-child{border-bottom:0}
+      .panel-title{font-size:18px;min-height:48px;padding:0 16px}
+      .question-body{padding:18px;font-size:15px}
+      .options{padding:16px 12px}
+      .watermark::after{font-size:34px;white-space:normal;inset:auto 10px 45%}
+      .result-score{grid-template-columns:1fr}
+      .btn-row{justify-content:center}
+    }
+    @media print{
+      body{background:white}
+      .btn-row,.quiz-top{display:none!important}
+      .card,.exam-card{box-shadow:none}
+      .screen{display:block;min-height:auto}
+      #startScreen,#quizScreen{display:none!important}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="startScreen" class="screen active">
+      <div class="card watermark">
+        <div class="header">
+          <h1>Simulador de Situaciones Didácticas</h1>
+          <p>Disciplina: Español · Campo formativo Lenguajes · Fase 6 · Nueva Escuela Mexicana</p>
+        </div>
+        <div class="start-body">
+          <div class="intro-box">
+            <h2>Propósito del simulador</h2>
+            <p>Este ejercicio presenta casos de mayor complejidad similares a los que puede enfrentar una maestra o un maestro de Español en secundaria. Las opciones son deliberadamente cercanas entre sí para fomentar análisis reflexivo sobre decisiones didácticas, metodológicas, estratégicas y de evaluación, considerando inclusión, equidad, integración social, valores, comunicación asertiva, lectura de la realidad y logro de contenidos/PDA.</p>
+            <p>Al responder de forma incorrecta, el simulador mostrará una justificación más amplia: por qué la opción no es suficiente, qué riesgo pedagógico presenta y cómo debería abordarse conforme al enfoque humanista, comunitario, inclusivo e intercultural de la Nueva Escuela Mexicana, el Plan de Estudio 2022, el Programa Sintético de Fase 6 y orientaciones de evaluación formativa y convivencia escolar.</p>
+            <div class="meta"><b>Fuentes de referencia:</b> Plan de Estudio 2022; Programa de Estudio para la Educación Secundaria: Programa Sintético de la Fase 6, SEP, 2024; evaluación formativa en la NEM; lineamientos y materiales de convivencia escolar. <br><b>Nivel:</b> dificultad alta, orientado al análisis de práctica docente.</div>
+          </div>
+          <div class="teacher-box">
+            <label for="teacherInput">Nombre del docente</label>
+            <input id="teacherInput" type="text" placeholder="Escriba su nombre completo" autocomplete="off" />
+            <p class="small">El nombre aparecerá en el resultado final del simulador.</p>
+            <button class="btn" style="width:100%;margin-top:14px" onclick="startQuiz()">Iniciar simulador</button>
+          </div>
+        </div>
+        <div class="credits">Autor: Profr. Luis G. Aparicio</div>
+      </div>
+    </section>
+
+    <section id="quizScreen" class="screen">
+      <div class="quiz-top">
+        <div class="teacher-name" id="teacherLabel"></div>
+        <div class="progress-box">
+          <span id="progressText">Pregunta 1 de 33</span>
+          <div class="bar"><span id="progressBar"></span></div>
+        </div>
+      </div>
+      <div class="exam-card watermark">
+        <div class="exam-grid">
+          <div class="panel">
+            <div class="panel-title" id="questionTitle">Pregunta 1)</div>
+            <div class="question-body">
+              <div class="case-text" id="caseText"></div>
+              <div class="instruction" id="instructionText"></div>
+              <div class="meta" id="focusText"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title center">Opciones</div>
+            <div class="options" id="optionsBox"></div>
+            <div id="feedback" class="feedback"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button id="checkBtn" class="btn btn-success" onclick="checkAnswer()">Comprobar respuesta</button>
+          <button id="nextBtn" class="btn" onclick="nextQuestion()" disabled>Siguiente</button>
+        </div>
+      </div>
+      <div class="credits">Autor: Profr. Luis G. Aparicio</div>
+    </section>
+
+    <section id="resultScreen" class="screen">
+      <div class="card watermark">
+        <div class="header">
+          <h1>Resultados del simulador</h1>
+          <p id="resultTeacher"></p>
+        </div>
+        <div class="result-body">
+          <div class="result-score">
+            <div class="stat"><span>Aciertos</span><b id="rightCount">0</b></div>
+            <div class="stat"><span>Errores</span><b id="wrongCount">0</b></div>
+            <div class="stat"><span>Porcentaje</span><b id="percentCount">0%</b></div>
+          </div>
+          <div id="finalMessage" class="intro-box"></div>
+          <div id="categorySummary" class="intro-box" style="margin-top:14px"></div>
+          <h2 style="color:var(--guinda);font-size:20px">Revisión de respuestas</h2>
+          <div id="reviewBox"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="window.print()">Imprimir resultados</button>
+          <button class="btn btn-danger" onclick="restartQuiz()">Reiniciar simulador</button>
+        </div>
+        <div class="credits">Autor: Profr. Luis G. Aparicio</div>
+      </div>
+    </section>
+  </div>
+
+<script>
+const questions = [
+  {
+    "case": "En primer grado, al iniciar un proyecto de lectura y escritura, el docente detecta baja comprensión lectora, poca participación oral y escritos breves. Sin embargo, en conversaciones informales los estudiantes hablan con detalle de experiencias familiares, trabajo local, expresiones regionales y conflictos de convivencia. El colectivo escolar pide evidencias rápidas para decidir cómo iniciar el trimestre.",
+    "instruction": "Seleccione la decisión inicial más sólida para diseñar una situación didáctica de Español, Fase 6.",
+    "focus": "Aspecto: lectura de la realidad, diagnóstico contextualizado, programa analítico y uso social del lenguaje.",
+    "options": [
+      {
+        "text": "Aplicar una prueba de comprensión, ordenar al grupo por puntaje y trabajar fichas de lectura literal hasta que todos alcancen el mismo nivel antes de abordar textos vinculados con la comunidad.",
+        "correct": false,
+        "feedback": "Aunque parte de una evidencia diagnóstica, se queda en clasificación y aplaza la contextualización. La dificultad no está sólo en medir comprensión, sino en convertir las experiencias y voces del grupo en punto de partida para leer, dialogar y escribir con sentido."
+      },
+      {
+        "text": "Recoger evidencias iniciales de lectura, escritura y oralidad; escuchar intereses y saberes comunitarios; seleccionar un contenido/PDA pertinente del grado; y diseñar una situación donde los estudiantes lean, dialoguen y produzcan textos con destinatario real.",
+        "correct": true,
+        "feedback": "Es adecuada porque integra diagnóstico, lectura de la realidad, selección curricular y propósito comunicativo. No separa la enseñanza de Español del contexto, ni reduce el diagnóstico a una calificación."
+      },
+      {
+        "text": "Iniciar con reglas de ortografía y copia diaria durante dos semanas, porque sin dominio mecánico de la escritura no conviene promover diálogo, lectura crítica ni textos comunitarios.",
+        "correct": false,
+        "feedback": "Confunde prerrequisitos con aprendizaje situado. La ortografía se puede trabajar dentro de procesos de escritura, revisión y reescritura, pero no debe bloquear la oralidad, la comprensión ni la participación."
+      },
+      {
+        "text": "Solicitar a cada familia un texto sobre su comunidad para usarlo como material principal, sin ajustar el contenido a los PDA porque el codiseño permite sustituir el Programa Sintético cuando el contexto lo requiere.",
+        "correct": false,
+        "feedback": "Recuperar voces comunitarias es valioso, pero no sustituye el análisis curricular. El codiseño contextualiza y puede incorporar contenidos locales, manteniendo relación con los contenidos y procesos de desarrollo de aprendizaje."
+      }
+    ],
+    "rightApproach": "Iniciar con diagnóstico amplio, lectura de la realidad, selección de contenido/PDA de Español y una práctica social del lenguaje con propósito, destinatario y evidencias para ajustar la intervención."
+  },
+  {
+    "case": "En una actividad autobiográfica de primer grado, varios alumnos utilizan palabras regionales, apodos familiares y expresiones del habla local. Una alumna afirma que esas formas 'son incorrectas' y que sólo debe aceptarse el español formal del libro.",
+    "instruction": "¿Qué intervención docente promueve aprendizaje lingüístico e inclusión?",
+    "focus": "Aspecto: diversidad de lenguas, variantes del español, identidad y sentido de pertenencia.",
+    "options": [
+      {
+        "text": "Corregir todas las expresiones regionales en el texto final y explicar que en la escuela se aprende a abandonar formas familiares para escribir de manera correcta.",
+        "correct": false,
+        "feedback": "Promueve una visión deficitaria de la lengua. La escuela debe ampliar repertorios comunicativos, no desvalorizar la identidad lingüística ni convertir la norma escolar en instrumento de exclusión."
+      },
+      {
+        "text": "Aceptar todas las expresiones sin reflexión ni revisión, porque cuestionar cualquier uso del lenguaje sería contrario a la inclusión y limitaría la libertad de expresión del alumnado.",
+        "correct": false,
+        "feedback": "La inclusión no significa ausencia de enseñanza. Es necesario valorar las variantes y, al mismo tiempo, analizar adecuación, propósito, destinatario y registro según la situación comunicativa."
+      },
+      {
+        "text": "Comparar variantes, registros y contextos de uso; reconocer su valor identitario; revisar el texto según propósito y destinatario; y construir acuerdos de respeto para evitar burlas o jerarquías lingüísticas.",
+        "correct": true,
+        "feedback": "Es la respuesta más pertinente porque enseña diversidad lingüística y adecuación comunicativa sin discriminar. Atiende el contenido de Español y la convivencia."
+      },
+      {
+        "text": "Pedir que la alumna que hizo el comentario investigue la definición de dialecto y exponga sola frente al grupo como consecuencia formativa de su error.",
+        "correct": false,
+        "feedback": "Puede parecer reflexivo, pero individualiza el conflicto y lo transforma en castigo. La situación exige aprendizaje colectivo, diálogo y acuerdos de trato respetuoso."
+      }
+    ],
+    "rightApproach": "Valorar las variantes lingüísticas como parte de la identidad, enseñar adecuación comunicativa y convertir el incidente en una reflexión colectiva sobre respeto, diversidad y uso situado del español."
+  },
+  {
+    "case": "En segundo grado, durante exposiciones orales, algunos estudiantes interrumpen con comentarios irónicos. La docente observa que los alumnos sí tienen argumentos, pero los expresan mediante descalificaciones. Planea trabajar comunicación asertiva vinculada con tensiones y conflictos de la sociedad contemporánea.",
+    "instruction": "Elija la estrategia metodológica más pertinente.",
+    "focus": "Aspecto: comunicación asertiva, diálogo, argumentación y convivencia democrática.",
+    "options": [
+      {
+        "text": "Cancelar las exposiciones y sustituirlas por resúmenes escritos individuales para proteger el ambiente del aula y evitar que se repitan expresiones ofensivas.",
+        "correct": false,
+        "feedback": "Evita el problema comunicativo en lugar de abordarlo. La clase de Español puede enseñar escucha, réplica, argumentación, acuerdos y reparación del daño verbal."
+      },
+      {
+        "text": "Organizar un debate con reglas explícitas, análisis de ejemplos de comunicación agresiva y asertiva, roles rotativos, coevaluación de escucha y retroalimentación sobre la calidad del argumento y el trato respetuoso.",
+        "correct": true,
+        "feedback": "Es adecuada porque no sólo controla la conducta, sino que convierte la dificultad en contenido de aprendizaje: argumentar sin violentar, escuchar y sostener posturas."
+      },
+      {
+        "text": "Permitir que el grupo debata libremente y sólo intervenir al final con una calificación de participación, porque la autonomía estudiantil requiere mínima intervención docente.",
+        "correct": false,
+        "feedback": "La autonomía necesita andamiaje. Sin criterios, seguimiento y retroalimentación, es probable que se reproduzcan las mismas formas de comunicación violenta."
+      },
+      {
+        "text": "Separar a los estudiantes con mayor tendencia a interrumpir y asignarles una exposición escrita para que el resto pueda debatir sin interrupciones.",
+        "correct": false,
+        "feedback": "Reduce el conflicto de manera temporal, pero excluye a quienes más necesitan aprender habilidades de comunicación y autorregulación."
+      }
+    ],
+    "rightApproach": "Diseñar debates, mesas de diálogo o círculos de conversación con reglas, roles, criterios y retroalimentación para desarrollar argumentación, escucha y comunicación asertiva."
+  },
+  {
+    "case": "En tercer grado, el grupo revisa textos sobre migración, discriminación lingüística y convivencia entre culturas. Algunos alumnos opinan que la interculturalidad consiste en 'tolerar' a quienes son diferentes, pero no consideran necesario cambiar prácticas de exclusión en la escuela.",
+    "instruction": "¿Qué planteamiento favorece una comprensión más profunda del diálogo intercultural?",
+    "focus": "Aspecto: interculturalidad crítica, diálogo intercultural y construcción democrática.",
+    "options": [
+      {
+        "text": "Solicitar un cartel con frases de tolerancia y respeto, cuidando que sea visualmente atractivo, porque el mensaje positivo es suficiente para modificar la convivencia.",
+        "correct": false,
+        "feedback": "El cartel puede ser un producto, pero no basta si no hay análisis, diálogo, argumentación y acciones. Se queda en discurso superficial."
+      },
+      {
+        "text": "Analizar textos con posturas distintas, identificar prácticas escolares de exclusión, discutirlas con comunicación asertiva y elaborar una propuesta argumentada para transformar una situación concreta del aula o escuela.",
+        "correct": true,
+        "feedback": "Es correcta porque pasa de la tolerancia superficial a la reflexión crítica, el diálogo y la acción comunitaria sustentada en textos y argumentos."
+      },
+      {
+        "text": "Evitar el tema para no generar conflicto entre estudiantes, pues hablar de discriminación puede dividir al grupo y afectar el clima de clase.",
+        "correct": false,
+        "feedback": "La NEM no plantea ocultar tensiones, sino abordarlas con diálogo, enfoque de derechos, inclusión y construcción de acuerdos."
+      },
+      {
+        "text": "Pedir que cada estudiante defina interculturalidad en su cuaderno y después aplicar un cuestionario de opción múltiple para verificar el significado conceptual.",
+        "correct": false,
+        "feedback": "Comprender un concepto es necesario, pero insuficiente. El PDA exige analizar textos, reconocer la función del diálogo intercultural y practicarlo en interacción social."
+      }
+    ],
+    "rightApproach": "Trabajar textos, diálogo, argumentación y propuestas de intervención que reconozcan relaciones de poder, exclusión y posibilidades de convivencia democrática."
+  },
+  {
+    "case": "El colectivo de Español quiere abordar el consumo de productos chatarra en la escuela. Algunos proponen sólo hacer carteles con dibujos; otros sugieren un proyecto que integre lectura de mensajes publicitarios, análisis de recursos gráficos, escritura de recomendaciones y difusión en medios escolares.",
+    "instruction": "Seleccione la opción que mejor articula contenido, PDA y eje articulador Vida saludable.",
+    "focus": "Aspecto: integración curricular, mensajes para una vida saludable y propósito comunicativo.",
+    "options": [
+      {
+        "text": "Elegir el cartel como producto único y evaluar limpieza, colores y tamaño de letra, porque el eje Vida saludable se cumple al mencionar alimentos sanos.",
+        "correct": false,
+        "feedback": "El producto visual por sí solo no garantiza logro del contenido. Falta análisis de mensajes, propósito, destinatario, recursos y retroalimentación del proceso."
+      },
+      {
+        "text": "Partir de mensajes reales, identificar recursos persuasivos, discutir hábitos de consumo, diseñar mensajes impresos o audiovisuales adecuados al grado y compartirlos con destinatarios concretos dentro de la escuela.",
+        "correct": true,
+        "feedback": "Es la opción más completa porque integra lectura crítica, producción de mensajes, recursos multimodales, contexto escolar y vida saludable."
+      },
+      {
+        "text": "Pedir una investigación general sobre nutrición y calificar sólo la cantidad de información, porque la disciplina de Español debe limitarse a revisar que el texto no tenga errores ortográficos.",
+        "correct": false,
+        "feedback": "La disciplina de Español no se reduce a ortografía. Debe trabajar comprensión, producción, propósito, recursos discursivos y comunicación social del mensaje."
+      },
+      {
+        "text": "Invitar a Ciencias a explicar nutrientes y después pedir a Español copiar la información en una cartulina, para que cada disciplina mantenga separados sus contenidos.",
+        "correct": false,
+        "feedback": "Puede haber vinculación con Ciencias, pero no debe ser una suma fragmentada. La integración requiere que Español aporte lectura crítica, lenguaje, discurso y producción comunicativa."
+      }
+    ],
+    "rightApproach": "Vincular el eje Vida saludable con análisis y producción de mensajes claros, pertinentes y revisados, usando recursos lingüísticos, gráficos o audiovisuales con destinatarios reales."
+  },
+  {
+    "case": "Al cerrar un proyecto de escritura argumentativa, el docente asigna 8, 9 o 10 según el texto final. Los estudiantes no saben qué aspectos mejoraron, por qué otros quedaron en proceso ni qué acciones concretas pueden realizar para avanzar.",
+    "instruction": "¿Qué decisión representa mejor la evaluación formativa?",
+    "focus": "Aspecto: evaluación formativa, retroalimentación dialógica, autoevaluación y mejora.",
+    "options": [
+      {
+        "text": "Agregar una rúbrica al final del proyecto y entregar el puntaje de cada criterio, sin modificar la secuencia porque la retroalimentación final ya permite objetividad.",
+        "correct": false,
+        "feedback": "La rúbrica puede ayudar, pero si aparece sólo al final funciona como medición. La evaluación formativa acompaña el proceso y orienta decisiones durante la escritura."
+      },
+      {
+        "text": "Sustituir la calificación por comentarios generales como 'vas bien' o 'échale ganas', porque la evaluación formativa evita señalar errores para cuidar la autoestima.",
+        "correct": false,
+        "feedback": "La retroalimentación debe ser específica, clara y útil. Cuidar la autoestima no significa omitir dificultades, sino convertirlas en oportunidades de mejora."
+      },
+      {
+        "text": "Incorporar criterios desde el inicio, analizar modelos, revisar borradores, promover autoevaluación y coevaluación, dialogar sobre avances y permitir reescritura con metas específicas.",
+        "correct": true,
+        "feedback": "Es adecuada porque la evaluación se integra a la enseñanza, acompaña el proceso y orienta la mejora del aprendizaje."
+      },
+      {
+        "text": "Calificar únicamente esfuerzo, asistencia y entrega puntual, porque en la NEM se reconoce más el proceso que el producto final.",
+        "correct": false,
+        "feedback": "Reconocer el proceso no significa abandonar los aprendizajes del contenido. Deben observarse avances en argumentación, estructura, uso de evidencias, revisión y propósito comunicativo."
+      }
+    ],
+    "rightApproach": "Usar criterios compartidos, observación, diálogo, revisión de borradores, retroalimentación específica y reescritura para que la evaluación permita mejorar durante el proceso."
+  },
+  {
+    "case": "En tercer grado, el docente quiere que sus estudiantes creen textos literarios de distintos géneros para proponer soluciones a un problema de la comunidad escolar. El grupo identifica como problema la falta de empatía hacia estudiantes nuevos o con dificultades para integrarse.",
+    "instruction": "¿Qué metodología permitiría articular mejor el PDA con inclusión e integración social?",
+    "focus": "Aspecto: función creativa del español, proyecto comunitario, inclusión y producción literaria.",
+    "options": [
+      {
+        "text": "Aplicar una secuencia centrada en definiciones de cuento, poema y teatro; después solicitar que elijan un género y entreguen una creación individual sin socializarla.",
+        "correct": false,
+        "feedback": "Puede trabajar conceptos, pero pierde el propósito comunitario y la dimensión social de la producción literaria."
+      },
+      {
+        "text": "Desarrollar un proyecto donde investiguen experiencias de integración, analicen recursos literarios, creen textos con destinatario real, los compartan en espacios escolares y reflexionen sobre su impacto en la convivencia.",
+        "correct": true,
+        "feedback": "Es correcta porque articula contenido, metodología de proyecto, producción literaria, inclusión y transformación del entorno escolar."
+      },
+      {
+        "text": "Pedir a los estudiantes integrados que escriban textos para aconsejar a quienes no socializan, de modo que el grupo reciba recomendaciones directas de sus compañeros con mayor liderazgo.",
+        "correct": false,
+        "feedback": "Puede reforzar jerarquías y responsabilizar a quienes tienen dificultades. La inclusión se construye colectivamente, no desde una mirada de déficit."
+      },
+      {
+        "text": "Organizar un concurso literario individual con premios para los tres mejores textos, porque la competencia aumenta la calidad y motiva a los estudiantes con mayor talento.",
+        "correct": false,
+        "feedback": "La competencia puede motivar a algunos, pero no garantiza inclusión ni participación amplia. El propósito es resolver una problemática comunitaria, no sólo premiar productos sobresalientes."
+      }
+    ],
+    "rightApproach": "Diseñar un proyecto literario con investigación, análisis de recursos, creación, socialización y reflexión sobre el efecto de los textos en la convivencia y la inclusión."
+  },
+  {
+    "case": "En segundo grado hay una estudiante con baja visión y un alumno con dificultades severas de lectura. El grupo trabajará textos literarios narrativos para analizarlos y expresar un juicio estético. El docente teme bajar el nivel de exigencia si adapta materiales.",
+    "instruction": "¿Qué alternativa refleja una práctica inclusiva sin perder el propósito del PDA?",
+    "focus": "Aspecto: inclusión, ajustes razonables, acceso al texto y logro de aprendizajes de Español.",
+    "options": [
+      {
+        "text": "Reducir a estos estudiantes la actividad a copiar una biografía del autor, porque analizar recursos narrativos sería demasiado complejo para ellos.",
+        "correct": false,
+        "feedback": "Es una adaptación que empobrece el aprendizaje y cambia el propósito del PDA. La inclusión requiere acceso y apoyos, no sustitución por tareas de menor valor."
+      },
+      {
+        "text": "Ofrecer textos con letra ampliada, audiolectura, lectura compartida, organizadores para identificar recursos narrativos y opciones de respuesta oral o escrita, manteniendo criterios sobre interpretación y juicio estético.",
+        "correct": true,
+        "feedback": "Es correcta porque elimina barreras, diversifica medios de acceso y expresión, y conserva el aprendizaje central."
+      },
+      {
+        "text": "Pedir al resto del equipo que realice el análisis y que los estudiantes con dificultad sólo participen en la presentación final para que se sientan incluidos.",
+        "correct": false,
+        "feedback": "Participar de manera simbólica no garantiza aprendizaje. Todos deben tener oportunidades reales de comprender, analizar y expresar ideas."
+      },
+      {
+        "text": "Aplicar el mismo texto, mismo tiempo y mismo formato para evitar trato desigual, pues la equidad exige que todos reciban exactamente la misma tarea.",
+        "correct": false,
+        "feedback": "Equidad no equivale a uniformidad. Dar lo mismo a todos puede mantener barreras; se requieren apoyos diferenciados para acceder al aprendizaje."
+      }
+    ],
+    "rightApproach": "Identificar barreras, ofrecer apoyos y formatos accesibles, diversificar participación y mantener criterios relacionados con los recursos literarios, la interpretación y el juicio estético."
+  },
+  {
+    "case": "El Programa Analítico de la escuela estableció al inicio del ciclo un proyecto sobre lectura literaria. A mitad del trimestre aparecen conflictos por mensajes ofensivos en chats de grupo y burlas durante exposiciones. Algunos docentes dicen que no conviene modificar lo planeado porque ya fue aprobado.",
+    "instruction": "¿Qué decisión se ajusta al carácter dinámico del Programa Analítico?",
+    "focus": "Aspecto: codiseño, ajuste del Programa Analítico, CTE y problemática emergente.",
+    "options": [
+      {
+        "text": "Mantener exactamente la planeación para cumplir con la dosificación anual, y atender los chats sólo desde prefectura o dirección.",
+        "correct": false,
+        "feedback": "Desvincula el problema de la enseñanza. El Programa Analítico debe revisarse y puede reorientar contenidos, metodologías y evaluación ante nuevas realidades."
+      },
+      {
+        "text": "Suspender todos los contenidos de Español y dedicar el mes completo a pláticas disciplinarias, porque la convivencia tiene prioridad sobre el aprendizaje.",
+        "correct": false,
+        "feedback": "Atender convivencia no implica abandonar contenidos. La comunicación asertiva, argumentación y textos informativos pueden articularse con la problemática."
+      },
+      {
+        "text": "Revisar evidencias en colectivo, ajustar el proyecto para incluir comunicación asertiva y producción de textos contra la violencia, definir acciones de seguimiento y valorar avances mediante evaluación formativa.",
+        "correct": true,
+        "feedback": "Es correcta porque conserva el vínculo curricular, responde a la realidad y usa el trabajo colegiado para reorientar la intervención."
+      },
+      {
+        "text": "Modificar sólo el producto final para que ahora sea un cartel contra el acoso, sin cambiar actividades, criterios ni estrategias, a fin de no alterar la planeación original.",
+        "correct": false,
+        "feedback": "Cambiar el producto sin ajustar el proceso suele ser superficial. Se requiere revisar propósitos, actividades, participación y evaluación."
+      }
+    ],
+    "rightApproach": "Usar CTE y academia para analizar evidencias, contextualizar contenidos y ajustar metodología, estrategias y evaluación conforme a la problemática emergente."
+  },
+  {
+    "case": "En una secuencia sobre textos de divulgación científica, varios alumnos usan información de redes sociales sobre salud sin revisar autoría ni evidencia. El docente quiere promover pensamiento crítico desde Español y no sólo corregir datos.",
+    "instruction": "¿Qué intervención didáctica es más pertinente?",
+    "focus": "Aspecto: textos de divulgación científica, lectura crítica, fuentes y responsabilidad comunicativa.",
+    "options": [
+      {
+        "text": "Prohibir el uso de redes sociales y entregar una fuente única confiable para que todos copien la información correcta sin riesgo de errores.",
+        "correct": false,
+        "feedback": "Evita el error, pero no enseña a valorar fuentes. El pensamiento crítico se desarrolla comparando, verificando y argumentando por qué una información es confiable."
+      },
+      {
+        "text": "Comparar fuentes con criterios de autoría, fecha, evidencia, propósito y lenguaje; discutir riesgos de desinformación; y elaborar textos de divulgación claros para un destinatario escolar.",
+        "correct": true,
+        "feedback": "Es adecuada porque transforma la desinformación en oportunidad de aprendizaje de lectura crítica y producción responsable."
+      },
+      {
+        "text": "Calificar sólo ortografía y presentación, porque la veracidad de los datos corresponde a Ciencias y no a la disciplina de Español.",
+        "correct": false,
+        "feedback": "La comunicación de información confiable también es responsabilidad de Español, especialmente en textos de divulgación científica."
+      },
+      {
+        "text": "Permitir cualquier fuente si el estudiante incluye enlace, ya que citar una URL cumple con el criterio de honestidad académica.",
+        "correct": false,
+        "feedback": "Citar no es lo mismo que verificar. Deben analizarse confiabilidad, evidencia y pertinencia del texto para el propósito comunicativo."
+      }
+    ],
+    "rightApproach": "Enseñar criterios de confiabilidad, contrastar información, dialogar sobre desinformación y producir textos de divulgación con lenguaje claro, evidencias y destinatario definido."
+  },
+  {
+    "case": "Un grupo elaborará una propuesta para erradicar expresiones de violencia en la escuela. Durante la organización, los alumnos con mayor facilidad de palabra acaparan decisiones y quienes leen o escriben con dificultad quedan como encargados de decorar.",
+    "instruction": "¿Qué organización favorece inclusión, equidad y logro del PDA?",
+    "focus": "Aspecto: participación equitativa, colaboración, roles y comunicación asertiva.",
+    "options": [
+      {
+        "text": "Mantener la distribución espontánea, porque en el trabajo colaborativo cada estudiante aporta desde lo que mejor sabe hacer y así se garantiza un producto de calidad.",
+        "correct": false,
+        "feedback": "Esa lógica puede naturalizar exclusiones. Colaborar no significa fijar roles por habilidad, sino generar condiciones para que todos avancen en lectura, escritura, oralidad y convivencia."
+      },
+      {
+        "text": "Asignar roles rotativos, apoyos de lectura y escritura, momentos de escucha obligatoria, criterios compartidos y retroalimentación sobre participación, calidad del mensaje y trato respetuoso.",
+        "correct": true,
+        "feedback": "Es correcta porque equilibra participación, aprendizaje comunicativo e inclusión, sin reducir a algunos estudiantes a tareas periféricas."
+      },
+      {
+        "text": "Separar un equipo de alumnos con dificultades para que trabajen a su ritmo en una propuesta sencilla, mientras el resto realiza la versión formal para la comunidad.",
+        "correct": false,
+        "feedback": "Puede parecer apoyo, pero segrega y disminuye expectativas. Se deben ofrecer andamiajes dentro de experiencias comunes de aprendizaje."
+      },
+      {
+        "text": "Pedir a los alumnos con facilidad de palabra que enseñen al resto y decidir que ellos representen al grupo en todas las presentaciones por eficiencia.",
+        "correct": false,
+        "feedback": "La tutoría entre pares puede ayudar, pero no debe concentrar el poder de decisión ni limitar oportunidades de participación de los demás."
+      }
+    ],
+    "rightApproach": "Organizar equipos con roles rotativos, apoyos diferenciados, criterios claros y seguimiento para que todos participen en decisiones, producción textual y socialización."
+  },
+  {
+    "case": "En tercer grado se trabajará un ensayo sobre un género literario de elección para argumentar un juicio estético. Algunos alumnos quieren escribir opiniones generales como 'me gustó' o 'está bonito' sin justificar con recursos del texto.",
+    "instruction": "Seleccione la estrategia que favorece el PDA de manera más rigurosa.",
+    "focus": "Aspecto: juicio estético, ensayo, argumentación y evidencias textuales.",
+    "options": [
+      {
+        "text": "Aceptar opiniones personales como evidencia suficiente, porque la literatura se valora desde el gusto individual y no debe limitarse con criterios formales.",
+        "correct": false,
+        "feedback": "El gusto personal importa, pero el juicio estético requiere argumentar con elementos del texto: recursos, género, efectos, lenguaje y contexto de lectura."
+      },
+      {
+        "text": "Proporcionar una plantilla rígida para que todos escriban el mismo ensayo, evaluando que repitan la estructura solicitada aunque no usen evidencias literarias.",
+        "correct": false,
+        "feedback": "La estructura ayuda, pero sin análisis textual puede convertirse en fórmula. El aprendizaje está en argumentar un juicio sustentado."
+      },
+      {
+        "text": "Analizar modelos de comentarios y ensayos, identificar recursos literarios, construir criterios de juicio estético, seleccionar citas o ejemplos y revisar borradores para fortalecer la argumentación.",
+        "correct": true,
+        "feedback": "Es adecuada porque articula lectura, análisis, criterio estético y escritura argumentativa con apoyo gradual."
+      },
+      {
+        "text": "Cambiar el ensayo por una exposición oral breve para evitar plagio y disminuir la carga de escritura en el cierre del proyecto.",
+        "correct": false,
+        "feedback": "Puede incluirse oralidad, pero sustituir la escritura evita el PDA. La solución es acompañar el proceso de escritura y revisión, no eliminarlo."
+      }
+    ],
+    "rightApproach": "Guiar el paso de opinión a juicio estético mediante lectura analítica, criterios compartidos, evidencias textuales, modelos, borradores y retroalimentación."
+  },
+  {
+    "case": "Un docente de primer grado quiere abordar creaciones literarias tradicionales de la comunidad. Algunos estudiantes conocen leyendas, refranes y corridos familiares, pero otros no desean compartir porque temen burlas o consideran que 'no son literatura'.",
+    "instruction": "¿Qué actuación docente se alinea mejor con el enfoque de Lenguajes?",
+    "focus": "Aspecto: literatura tradicional, memoria comunitaria, dignidad cultural y promoción de lectura.",
+    "options": [
+      {
+        "text": "Pedir únicamente ejemplos de autores reconocidos para asegurar calidad literaria, y dejar los relatos familiares como anécdotas opcionales sin relación con el contenido.",
+        "correct": false,
+        "feedback": "Desvaloriza creaciones comunitarias. El contenido contempla recuperar y clasificar creaciones tradicionales para promover su lectura de manera creativa."
+      },
+      {
+        "text": "Crear un ambiente de respeto, recuperar voluntariamente relatos y expresiones, clasificarlos, analizarlos como creaciones literarias y promover su lectura mediante un producto colectivo con consentimiento de quienes los comparten.",
+        "correct": true,
+        "feedback": "Es correcta porque cuida la dignidad, reconoce saberes comunitarios y convierte la tradición oral o escrita en objeto de aprendizaje."
+      },
+      {
+        "text": "Obligar a todos a traer una leyenda de su familia para garantizar igualdad de participación, aunque algunos no quieran compartir información personal.",
+        "correct": false,
+        "feedback": "La participación debe ser cuidada y ética. Se pueden ofrecer alternativas y respetar privacidad sin abandonar el aprendizaje."
+      },
+      {
+        "text": "Permitir que sólo participen quienes ya conocen relatos, mientras el resto copia definiciones de mito, leyenda y refrán para no retrasar al grupo.",
+        "correct": false,
+        "feedback": "Divide al grupo y reduce la experiencia literaria. Todos pueden participar con lecturas, entrevistas, análisis, clasificación, ilustración, audio o comentarios."
+      }
+    ],
+    "rightApproach": "Recuperar creaciones tradicionales con respeto y consentimiento, analizarlas, clasificarlas y promover su lectura reconociendo su valor cultural y literario."
+  },
+  {
+    "case": "Un alumno de segundo grado suele interrumpir, responde con enojo cuando se frustra y busca llamar la atención. Sin embargo, produce ideas originales para campañas de lectura y sintetiza bien los argumentos de sus compañeros.",
+    "instruction": "¿Qué estrategia docente atiende mejor la integración social sin perder exigencia académica?",
+    "focus": "Aspecto: inclusión, autorregulación, fortalezas, convivencia y aprendizaje colaborativo.",
+    "options": [
+      {
+        "text": "Retirarlo de los equipos hasta que mejore su conducta, porque la inclusión no debe afectar el derecho del resto a trabajar con tranquilidad.",
+        "correct": false,
+        "feedback": "Proteger el ambiente es necesario, pero excluirlo refuerza el aislamiento y no enseña habilidades. Se requieren límites, apoyos y participación estructurada."
+      },
+      {
+        "text": "Darle siempre actividades individuales creativas para evitar conflictos; si trabaja solo, sus fortalezas podrán aprovecharse sin incomodar al grupo.",
+        "correct": false,
+        "feedback": "Aprovecha una fortaleza, pero no desarrolla colaboración, comunicación ni autorregulación en interacción social."
+      },
+      {
+        "text": "Asignarle roles breves y claros, anticipar normas, establecer señales de autorregulación, reconocer aportaciones pertinentes, ofrecer retroalimentación inmediata y acordar consecuencias reparadoras si daña la interacción.",
+        "correct": true,
+        "feedback": "Es adecuada porque combina altas expectativas, estructura, límites, reconocimiento de fortalezas y aprendizaje socioemocional dentro de la actividad."
+      },
+      {
+        "text": "Permitir que lidere el equipo para canalizar su energía, aunque interrumpa, porque asumir responsabilidad suele corregir la conducta sin intervención adicional.",
+        "correct": false,
+        "feedback": "Un rol de liderazgo sin andamiaje puede aumentar el problema. La responsabilidad debe acompañarse de acuerdos, seguimiento y retroalimentación."
+      }
+    ],
+    "rightApproach": "Integrar al estudiante con apoyos, roles, acuerdos, retroalimentación y medidas reparadoras, reconociendo fortalezas sin renunciar a la convivencia ni al aprendizaje."
+  },
+  {
+    "case": "Una alumna reporta que en un grupo de mensajería circulan burlas sobre su forma de hablar y su apariencia. El docente se entera durante una actividad de escritura de mensajes contra la violencia. Algunos compañeros dicen que no es asunto de la escuela porque ocurrió en línea fuera del horario escolar.",
+    "instruction": "¿Cuál respuesta combina protocolo, enfoque humanista y trabajo didáctico?",
+    "focus": "Aspecto: acoso escolar, cultura de paz, protección, documentación y comunicación asertiva.",
+    "options": [
+      {
+        "text": "Indicar que sólo se atenderán agresiones ocurridas dentro del aula, pero aprovechar el caso para pedir una reflexión escrita anónima sobre respeto digital.",
+        "correct": false,
+        "feedback": "La escritura puede ayudar, pero no sustituye la actuación ante posible acoso. Si afecta la vida escolar, debe activarse la ruta institucional correspondiente."
+      },
+      {
+        "text": "Documentar lo informado, canalizar según protocolo escolar, proteger a la alumna, informar a la autoridad correspondiente, trabajar prevención con el grupo sin exhibirla y fortalecer comunicación asertiva y acuerdos de convivencia digital.",
+        "correct": true,
+        "feedback": "Es correcta porque atiende protección, debido proceso, no revictimización, prevención y aprendizaje comunicativo."
+      },
+      {
+        "text": "Confrontar públicamente a quienes participaron para que reconozcan su error frente al grupo y pedir disculpa inmediata antes de continuar con la clase.",
+        "correct": false,
+        "feedback": "Puede revictimizar y escalar el conflicto. La intervención debe cuidar confidencialidad, seguridad, registro y seguimiento."
+      },
+      {
+        "text": "Pedir a la alumna que abandone temporalmente el chat y que ignore los comentarios, porque responder suele aumentar la agresión.",
+        "correct": false,
+        "feedback": "Traslada la responsabilidad a la víctima y no atiende el problema. Ignorar no es protocolo ni garantiza protección."
+      }
+    ],
+    "rightApproach": "Registrar, informar y actuar conforme al protocolo de acoso escolar; proteger a la estudiante; evitar revictimización; y desarrollar acciones didácticas de prevención, diálogo y cultura de paz."
+  },
+  {
+    "case": "En segundo grado, el PDA propone participar en un debate sobre expresiones de violencia, incluida la violencia de género, para argumentar una postura de rechazo. El grupo ha hecho comentarios estereotipados y algunos alumnos consideran que el tema es 'de mujeres'.",
+    "instruction": "¿Qué intervención metodológica es más adecuada?",
+    "focus": "Aspecto: debate, igualdad de género, rechazo argumentado a la violencia y cuidado del aula.",
+    "options": [
+      {
+        "text": "Evitar el tema de género para no generar polémica y debatir sobre violencia en general, con ejemplos neutros que no incomoden al grupo.",
+        "correct": false,
+        "feedback": "Evitarlo deja intactos los estereotipos. El tema debe abordarse con cuidado, información, reglas de diálogo y enfoque de derechos."
+      },
+      {
+        "text": "Presentar datos y textos pertinentes, establecer reglas de respeto, analizar estereotipos, preparar argumentos con evidencias, moderar el debate y cerrar con compromisos comunicativos contra expresiones de violencia.",
+        "correct": true,
+        "feedback": "Es correcta porque permite abordar un tema sensible con rigor, cuidado y finalidad formativa."
+      },
+      {
+        "text": "Dividir el grupo por sexo para que cada parte defienda su punto de vista, porque el contraste de opiniones garantiza pensamiento crítico.",
+        "correct": false,
+        "feedback": "Puede reforzar polarización y estereotipos. El pensamiento crítico requiere análisis de evidencias y diálogo respetuoso, no confrontación identitaria simplificada."
+      },
+      {
+        "text": "Solicitar opiniones libres sin fuentes para conocer lo que realmente piensan; después corregir verbalmente las participaciones discriminatorias.",
+        "correct": false,
+        "feedback": "La expresión libre sin marco puede reproducir violencia. Debe haber criterios, fuentes, acuerdos y mediación desde el inicio."
+      }
+    ],
+    "rightApproach": "Preparar el debate con textos, evidencias, acuerdos, moderación, cuidado emocional y criterios para argumentar una postura de rechazo a la violencia y los estereotipos."
+  },
+  {
+    "case": "En tercer grado se quiere preservar la memoria colectiva de la escuela mediante textos periodísticos de interpretación sobre sucesos significativos. El grupo elige narrar cómo cambió la convivencia después de la pandemia y la vuelta a clases presenciales.",
+    "instruction": "¿Qué secuencia fortalece mejor el contenido de géneros periodísticos?",
+    "focus": "Aspecto: memoria colectiva, géneros periodísticos de interpretación, fuentes y comunidad.",
+    "options": [
+      {
+        "text": "Pedir una crónica libre de una página, evaluando que tenga inicio, desarrollo y cierre, sin exigir entrevistas ni contraste de fuentes para no complicar la actividad.",
+        "correct": false,
+        "feedback": "La crónica puede ser pertinente, pero el género periodístico requiere investigación, fuentes, contexto y revisión del enfoque interpretativo."
+      },
+      {
+        "text": "Investigar el suceso con fuentes orales y escritas, diferenciar información y opinión, elegir un género periodístico de interpretación, redactar con contexto y evidencias, revisar ética del testimonio y compartirlo con la comunidad.",
+        "correct": true,
+        "feedback": "Es adecuada porque articula memoria colectiva, investigación, género, ética y socialización."
+      },
+      {
+        "text": "Entrevistar sólo a directivos para obtener una versión institucional confiable, evitando testimonios de estudiantes porque pueden ser subjetivos.",
+        "correct": false,
+        "feedback": "La memoria colectiva requiere diversas voces. Las fuentes estudiantiles son valiosas si se trabajan con cuidado ético y contraste."
+      },
+      {
+        "text": "Convertir el tema en línea del tiempo ilustrada, porque presentar fechas evita interpretaciones personales y reduce conflicto entre versiones.",
+        "correct": false,
+        "feedback": "Una línea del tiempo puede apoyar, pero no sustituye el trabajo periodístico de interpretación ni el análisis de voces y significados."
+      }
+    ],
+    "rightApproach": "Desarrollar investigación con diversas fuentes, análisis del género, escritura revisada, ética en el uso de testimonios y socialización para preservar memoria colectiva."
+  },
+  {
+    "case": "En tercer grado, el docente desea que sus alumnos elaboren una propuesta de divulgación científica con participación de la comunidad escolar. El tema elegido es la prevención de golpes de calor por el clima local. Algunos sugieren copiar información médica de internet y pegarla en carteles.",
+    "instruction": "¿Qué opción representa mejor una propuesta de divulgación científica desde Español?",
+    "focus": "Aspecto: divulgación científica, comunidad escolar, lenguaje claro y vida cotidiana.",
+    "options": [
+      {
+        "text": "Copiar información de sitios médicos confiables y colocarla en carteles, porque la fidelidad al texto original evita errores científicos.",
+        "correct": false,
+        "feedback": "La confiabilidad importa, pero divulgar exige comprender, seleccionar, adaptar lenguaje, citar y pensar en destinatarios. Copiar no desarrolla el PDA."
+      },
+      {
+        "text": "Investigar fuentes confiables, consultar a personal escolar o de salud, adaptar la información a lenguaje claro, diseñar cápsulas o textos breves, probar comprensión con destinatarios y ajustar el mensaje.",
+        "correct": true,
+        "feedback": "Es correcta porque integra investigación, comunidad, claridad comunicativa, revisión y pertinencia del mensaje."
+      },
+      {
+        "text": "Dejar que Ciencias realice todo el contenido y pedir a Español únicamente mejorar ortografía y diseño final.",
+        "correct": false,
+        "feedback": "Español aporta estructura, claridad, adecuación, argumentación, revisión y relación con destinatarios. No es sólo corrección superficial."
+      },
+      {
+        "text": "Realizar una exposición oral con definiciones técnicas, aunque el público no las comprenda, porque el lenguaje científico debe conservarse tal como aparece en las fuentes.",
+        "correct": false,
+        "feedback": "La divulgación no consiste en repetir tecnicismos, sino en hacer comprensible información confiable sin distorsionarla."
+      }
+    ],
+    "rightApproach": "Investigar, verificar, adaptar, citar y comunicar información científica en formatos comprensibles para la comunidad, con revisión de claridad e impacto."
+  },
+  {
+    "case": "En un grupo hay estudiantes que casi no participan oralmente. En una mesa de diálogo, los mismos cinco alumnos hablan siempre. El docente quiere fortalecer oralidad, escucha y confianza sin obligar a todos a exponer de improviso.",
+    "instruction": "¿Cuál estrategia es más pertinente?",
+    "focus": "Aspecto: oralidad, participación gradual, inclusión y seguridad comunicativa.",
+    "options": [
+      {
+        "text": "Establecer que todos deben hablar al menos un minuto sin preparación, porque la participación oral se fortalece enfrentando el miedo.",
+        "correct": false,
+        "feedback": "Puede generar ansiedad y no necesariamente mejora la calidad de la participación. Se requieren apoyos graduales y ambientes seguros."
+      },
+      {
+        "text": "Aceptar que algunos no participen oralmente y evaluar sólo su trabajo escrito, porque forzar la oralidad sería contrario a la inclusión.",
+        "correct": false,
+        "feedback": "La inclusión no implica renunciar a la oralidad. Debe ofrecerse acceso progresivo con distintas formas de participación."
+      },
+      {
+        "text": "Usar preparación por parejas, tarjetas de ideas, turnos breves, roles de escucha, preguntas guía y opciones de audio o lectura compartida, aumentando gradualmente la complejidad de la participación.",
+        "correct": true,
+        "feedback": "Es adecuada porque desarrolla oralidad con andamiaje, no desde la improvisación o la exclusión."
+      },
+      {
+        "text": "Pedir a los alumnos líderes que representen las opiniones del equipo para ahorrar tiempo y evitar que quienes son tímidos pasen un mal momento.",
+        "correct": false,
+        "feedback": "Protege momentáneamente, pero invisibiliza voces. La participación debe distribuirse y acompañarse."
+      }
+    ],
+    "rightApproach": "Crear condiciones graduales para hablar, escuchar y responder mediante apoyos, roles, preparación previa y retroalimentación respetuosa."
+  },
+  {
+    "case": "El docente trabajará cartas personales y autobiografías para expresar emociones e ideas vinculadas con la familia, la escuela y la comunidad. Le preocupa que algunos textos revelen situaciones sensibles o que se obligue a compartir información privada.",
+    "instruction": "¿Qué decisión integra valores, cuidado e intención didáctica?",
+    "focus": "Aspecto: recursos literarios, expresión emocional, privacidad, empatía y dignidad.",
+    "options": [
+      {
+        "text": "Pedir que todos lean su autobiografía completa frente al grupo para fortalecer confianza y empatía mediante exposición personal.",
+        "correct": false,
+        "feedback": "Puede vulnerar privacidad. La empatía se construye con cuidado, consentimiento y opciones de expresión."
+      },
+      {
+        "text": "Evitar cualquier texto personal y trabajar sólo biografías de personajes famosos, porque las emociones familiares no deben entrar al aula.",
+        "correct": false,
+        "feedback": "El contenido permite trabajar vínculos personales, familiares, escolares y comunitarios, siempre con criterios de cuidado y respeto."
+      },
+      {
+        "text": "Establecer acuerdos de confidencialidad, permitir textos reales o ficcionalizados, elegir qué compartir, analizar recursos expresivos y retroalimentar con criterios de lenguaje y respeto a la dignidad.",
+        "correct": true,
+        "feedback": "Es correcta porque integra aprendizaje literario, expresión emocional, privacidad y convivencia ética."
+      },
+      {
+        "text": "Solicitar que escriban sólo emociones positivas para evitar conflictos y mantener un clima de clase armonioso.",
+        "correct": false,
+        "feedback": "Limitar emociones empobrece la expresión y evita aprendizajes. Lo importante es acompañar la escritura con cuidado y límites éticos."
+      }
+    ],
+    "rightApproach": "Trabajar expresión emocional mediante recursos literarios con acuerdos de cuidado, consentimiento, opciones de ficción, retroalimentación respetuosa y protección de la privacidad."
+  },
+  {
+    "case": "En una actividad de escritura, varios estudiantes usan herramientas digitales para generar textos completos. El docente sospecha que no comprendieron el tema, pero también reconoce que la tecnología puede apoyar el aprendizaje.",
+    "instruction": "¿Qué intervención es más coherente con evaluación formativa y responsabilidad académica?",
+    "focus": "Aspecto: escritura, ética, uso crítico de herramientas digitales y proceso de aprendizaje.",
+    "options": [
+      {
+        "text": "Prohibir cualquier herramienta digital y anular los trabajos sospechosos, porque sólo la escritura manual demuestra aprendizaje auténtico.",
+        "correct": false,
+        "feedback": "La prohibición absoluta no enseña uso responsable ni garantiza comprensión. Debe atenderse el proceso de escritura y la autoría."
+      },
+      {
+        "text": "Aceptar los textos si están bien redactados, porque el producto final importa más que el procedimiento cuando el estudiante usa recursos disponibles.",
+        "correct": false,
+        "feedback": "La evaluación formativa requiere conocer cómo se construyó el texto, qué decisiones tomó el estudiante y qué aprendió."
+      },
+      {
+        "text": "Solicitar evidencias del proceso: plan, borradores, fuentes, decisiones de revisión y explicación oral; enseñar uso ético de herramientas como apoyo y retroalimentar la escritura propia.",
+        "correct": true,
+        "feedback": "Es adecuada porque no niega la tecnología, pero centra la evaluación en comprensión, autoría, revisión y aprendizaje."
+      },
+      {
+        "text": "Permitir que sólo estudiantes con alto desempeño usen herramientas digitales, porque ellos pueden distinguir mejor cuándo la información es confiable.",
+        "correct": false,
+        "feedback": "Genera inequidad. Todos necesitan criterios de uso crítico y responsable, con apoyos diferenciados."
+      }
+    ],
+    "rightApproach": "Evaluar el proceso de escritura, enseñar criterios de autoría y uso ético de herramientas, solicitar evidencias de comprensión y promover revisión personal."
+  },
+  {
+    "case": "El docente de Español atiende primer, segundo y tercer grado. Quiere trabajar 'violencia escolar' como problemática común, pero sabe que los PDA no son iguales en cada grado: primer grado propone una propuesta oral o escrita; segundo incluye debate y gestiones; tercero diseña estrategia y redacta texto informativo para sensibilizar.",
+    "instruction": "¿Cómo debe organizar la progresión por grado?",
+    "focus": "Aspecto: progresión de PDA, contextualización y complejidad creciente.",
+    "options": [
+      {
+        "text": "Usar la misma actividad y el mismo producto para los tres grados, porque comparten la problemática y eso garantiza integración curricular.",
+        "correct": false,
+        "feedback": "La problemática común no elimina la progresión. Cada grado requiere complejidad, géneros y procesos acordes con su PDA."
+      },
+      {
+        "text": "Diseñar una situación común con productos diferenciados: primer grado formula propuesta básica, segundo debate y gestiona recursos, y tercero diseña estrategia de sensibilización con texto informativo y gestión formal.",
+        "correct": true,
+        "feedback": "Es correcta porque mantiene una problemática articuladora, pero respeta el avance gradual de procesos de aprendizaje."
+      },
+      {
+        "text": "Trabajar sólo con tercer grado porque su PDA es más completo, y usarlo como modelo para que los otros grados avancen más rápido.",
+        "correct": false,
+        "feedback": "Acelerar sin considerar procesos puede generar frustración. Los PDA orientan rutas posibles según grado y complejidad."
+      },
+      {
+        "text": "Elegir el PDA más sencillo de primer grado para todos, con el fin de asegurar que ningún estudiante quede excluido.",
+        "correct": false,
+        "feedback": "Bajar la complejidad de todos no es inclusión. La equidad exige apoyos para alcanzar desafíos pertinentes a cada grado."
+      }
+    ],
+    "rightApproach": "Plantear una problemática común y diferenciar procesos, géneros, productos y criterios según los PDA de cada grado, con apoyos y complejidad creciente."
+  },
+  {
+    "case": "El grupo elaborará textos de opinión sobre una problemática de la comunidad. El docente quiere que la rúbrica sea comprensible y sirva para mejorar, no sólo para asignar una calificación al final.",
+    "instruction": "¿Qué procedimiento es más congruente?",
+    "focus": "Aspecto: criterios de evaluación, coevaluación, autorregulación y mejora de textos.",
+    "options": [
+      {
+        "text": "Diseñar la rúbrica en privado y mostrarla al final para evitar que los estudiantes escriban sólo para cumplir criterios.",
+        "correct": false,
+        "feedback": "Ocultar criterios limita la autorregulación. Los criterios deben orientar el proceso y permitir revisión."
+      },
+      {
+        "text": "Construir o analizar criterios con el grupo a partir de modelos, usarlos para revisar borradores, coevaluar con lenguaje respetuoso y decidir acciones de mejora antes de la entrega final.",
+        "correct": true,
+        "feedback": "Es adecuada porque convierte los criterios en herramienta de aprendizaje y diálogo."
+      },
+      {
+        "text": "Usar una lista de cotejo centrada en extensión, limpieza y entrega, porque esos aspectos son observables y evitan subjetividad.",
+        "correct": false,
+        "feedback": "Son observables, pero insuficientes. Deben considerarse postura, argumentos, evidencias, organización, adecuación y revisión."
+      },
+      {
+        "text": "Permitir que cada equipo defina sus propios criterios sin referencia al PDA, porque la autonomía estudiantil es prioritaria en la evaluación formativa.",
+        "correct": false,
+        "feedback": "La autonomía necesita marco curricular. Los estudiantes pueden participar en criterios, pero vinculados con el propósito de aprendizaje."
+      }
+    ],
+    "rightApproach": "Compartir y construir criterios vinculados al PDA, usarlos durante borradores, promover autoevaluación, coevaluación y retroalimentación específica para reescribir."
+  },
+  {
+    "case": "En una escuela con recursos limitados, el docente planea un proyecto de audiovisuales para promover lectura. Sólo hay pocos equipos y algunos alumnos no tienen internet en casa. El grupo de tercero debe crear guiones o narrativas audiovisuales con recursos literarios.",
+    "instruction": "¿Qué decisión permite inclusión y logro del aprendizaje?",
+    "focus": "Aspecto: recursos disponibles, equidad digital, guion audiovisual y creatividad.",
+    "options": [
+      {
+        "text": "Cambiar el proyecto por resumen escrito, porque sin suficientes dispositivos no es viable trabajar lenguaje audiovisual.",
+        "correct": false,
+        "feedback": "La falta de recursos requiere adaptar medios, no eliminar necesariamente el contenido. El guion y la narrativa pueden trabajarse con recursos sencillos."
+      },
+      {
+        "text": "Pedir que cada estudiante grabe en casa con su celular; quien no pueda hacerlo entregará una actividad diferente para no retrasar al grupo.",
+        "correct": false,
+        "feedback": "Traslada la desigualdad al hogar y separa aprendizajes. Se deben diseñar condiciones equitativas dentro de la escuela."
+      },
+      {
+        "text": "Trabajar guion, storyboard, lectura dramatizada, audio o video breve por equipos con roles rotativos, uso programado de equipos disponibles y criterios centrados en recursos literarios, propósito y audiencia.",
+        "correct": true,
+        "feedback": "Es correcta porque adapta el proyecto al contexto sin perder el contenido ni excluir a quienes no tienen recursos."
+      },
+      {
+        "text": "Seleccionar sólo a los equipos con mejor acceso tecnológico para representar al grupo, y que el resto apoye con ideas o decoración.",
+        "correct": false,
+        "feedback": "Excluye y reduce oportunidades de aprendizaje. La equidad exige organizar recursos para todos."
+      }
+    ],
+    "rightApproach": "Adaptar el proyecto a recursos reales mediante guiones, storyboards, audio o dramatización, roles, tiempos de uso y criterios vinculados al lenguaje audiovisual y literario."
+  },
+  {
+    "case": "El colectivo docente afirma que está integrando saberes porque al final del proyecto todos los grupos presentarán una feria con productos de varias asignaturas. Sin embargo, cada asignatura trabaja por separado y no hay una problemática común ni diálogo entre saberes.",
+    "instruction": "¿Qué reflexión corrige mejor esa concepción?",
+    "focus": "Aspecto: integración de saberes, campos formativos y no fragmentación del aprendizaje.",
+    "options": [
+      {
+        "text": "La integración se logra cuando los productos se exponen el mismo día, porque la convivencia entre asignaturas permite que el estudiante relacione aprendizajes por sí mismo.",
+        "correct": false,
+        "feedback": "Coincidir en una feria no garantiza integración. Si no hay problematización común ni articulación didáctica, puede ser sólo suma de productos."
+      },
+      {
+        "text": "La integración requiere una situación, problema o tema articulador; diálogo entre contenidos; acuerdos de metodología y evaluación; y momentos en que el estudiante resignifique saberes durante el proceso.",
+        "correct": true,
+        "feedback": "Es correcta porque entiende la integración como proceso de aprendizaje y no sólo como exhibición final."
+      },
+      {
+        "text": "La integración consiste en que todas las asignaturas evalúen el mismo producto final con una sola calificación, aunque cada una lo haya trabajado de forma independiente.",
+        "correct": false,
+        "feedback": "Una calificación común no sustituye la articulación curricular. Debe haber coherencia en propósitos, actividades, saberes y criterios."
+      },
+      {
+        "text": "La integración no es necesaria en secundaria porque las disciplinas tienen contenidos especializados y conviene evitar confusión entre campos.",
+        "correct": false,
+        "feedback": "La Fase 6 mantiene disciplinas, pero las articula en campos formativos y problemáticas que permiten comprender la realidad de manera menos fragmentada."
+      }
+    ],
+    "rightApproach": "Plantear una problemática común, acordar vínculos entre contenidos, definir productos y criterios coherentes, y propiciar que los alumnos relacionen saberes durante todo el proceso."
+  },
+  {
+    "case": "En segundo grado, durante la revisión de autobiografías, el docente detecta que varios textos narran experiencias de exclusión por forma de hablar, aspecto físico o situación económica. El docente duda si abordarlo porque no estaba en el contenido específico de la sesión.",
+    "instruction": "¿Qué decisión sería más formativa?",
+    "focus": "Aspecto: inclusión, identidad, autobiografía, lectura de la realidad y cuidado del grupo.",
+    "options": [
+      {
+        "text": "Mantener la sesión como estaba planeada y corregir únicamente estructura narrativa, porque abordar exclusión corresponde a Tutoría o Formación Cívica y Ética.",
+        "correct": false,
+        "feedback": "La realidad del grupo puede y debe dialogar con Español cuando surge en los textos, cuidando a las personas. La inclusión es eje articulador, no tarea de una sola asignatura."
+      },
+      {
+        "text": "Usar fragmentos de manera anónima y con consentimiento, analizar recursos narrativos y lenguaje para expresar vínculos, abrir diálogo cuidado sobre trato digno y acordar formas de retroalimentación respetuosa.",
+        "correct": true,
+        "feedback": "Es correcta porque vincula el aprendizaje literario y autobiográfico con identidad, cuidado, inclusión y convivencia."
+      },
+      {
+        "text": "Pedir que todos identifiquen públicamente quién escribió cada experiencia para promover empatía y que el grupo reconozca el daño causado.",
+        "correct": false,
+        "feedback": "Puede revictimizar. El cuidado, consentimiento y confidencialidad son indispensables al tratar experiencias sensibles."
+      },
+      {
+        "text": "Eliminar esos textos del proyecto para evitar conflictos y pedir nuevas autobiografías con temas positivos y neutros.",
+        "correct": false,
+        "feedback": "Evitar el tema niega voces relevantes. Es mejor acompañar con cuidado y criterios éticos."
+      }
+    ],
+    "rightApproach": "Aprovechar evidencias reales con consentimiento y cuidado, integrar recursos narrativos, diálogo respetuoso, retroalimentación ética y acuerdos de convivencia."
+  },
+  {
+    "case": "El docente quiere trabajar textos argumentativos sobre interculturalidad crítica en tercer grado. El grupo tiende a repetir frases generales como 'todos somos iguales' sin analizar desigualdades, tensiones o relaciones de poder.",
+    "instruction": "¿Qué estrategia didáctica aumenta el nivel de análisis?",
+    "focus": "Aspecto: argumentación, interculturalidad crítica, pensamiento crítico y evidencias.",
+    "options": [
+      {
+        "text": "Pedir que elaboren acrósticos sobre igualdad y respeto, porque la creatividad fortalece valores y evita discusiones complejas.",
+        "correct": false,
+        "feedback": "La creatividad puede apoyar, pero no sustituye el análisis argumentativo sobre tensiones interculturales y desigualdades."
+      },
+      {
+        "text": "Analizar casos y textos con posturas distintas, identificar causas y consecuencias de exclusión, contrastar argumentos, formular tesis propias y proponer acciones sustentadas en evidencias.",
+        "correct": true,
+        "feedback": "Es correcta porque lleva al estudiante de frases generales a argumentación crítica y situada."
+      },
+      {
+        "text": "Entregar un resumen sobre interculturalidad para que memoricen definiciones antes de escribir, porque el dominio conceptual garantiza buenos argumentos.",
+        "correct": false,
+        "feedback": "El concepto es útil, pero no garantiza pensamiento crítico si no se aplica a casos, textos, evidencias y posturas."
+      },
+      {
+        "text": "Permitir opiniones libres sin pedir fuentes, porque la interculturalidad se aprende escuchando cualquier experiencia personal sin cuestionarla.",
+        "correct": false,
+        "feedback": "Escuchar experiencias es valioso, pero la argumentación requiere análisis, evidencias y diálogo crítico respetuoso."
+      }
+    ],
+    "rightApproach": "Trabajar casos, textos, evidencias, tesis, contraargumentos y propuestas para que la escritura argumentativa exprese comprensión crítica y acciones inclusivas."
+  },
+  {
+    "case": "En primer grado, algunos alumnos presentan dificultades para sumar ideas, relacionar párrafos y mantener coherencia en sus textos. El docente planea trabajar textos narrativos sobre identidad y pertenencia a partir de variantes del español.",
+    "instruction": "¿Qué apoyo didáctico favorece escritura sin sustituir el proceso del alumno?",
+    "focus": "Aspecto: andamiaje, escritura narrativa, identidad y revisión.",
+    "options": [
+      {
+        "text": "Darles un texto modelo para copiarlo cambiando nombres y lugares, porque así practicarán una estructura correcta sin frustrarse.",
+        "correct": false,
+        "feedback": "Copiar no desarrolla decisiones de escritura ni voz propia. El andamiaje debe apoyar la producción, no reemplazarla."
+      },
+      {
+        "text": "Usar organizadores de secuencia, banco de conectores, lluvia de ideas sobre identidad, lectura de modelos, escritura por borradores y revisión focalizada en coherencia, vocabulario y propósito.",
+        "correct": true,
+        "feedback": "Es adecuada porque ofrece herramientas concretas y mantiene al estudiante como autor del texto."
+      },
+      {
+        "text": "Corregir todos los errores sobre el texto final y pedir que lo pasen en limpio, porque ver la versión correcta enseña mejor que revisar borradores.",
+        "correct": false,
+        "feedback": "La corrección final es insuficiente. La mejora ocurre cuando el estudiante comprende qué cambiar y por qué durante el proceso."
+      },
+      {
+        "text": "Reducir la actividad a responder preguntas cerradas sobre identidad, ya que escribir narraciones completas puede superar su nivel actual.",
+        "correct": false,
+        "feedback": "Las preguntas pueden iniciar el proceso, pero no deben sustituir la producción narrativa si ese es el PDA."
+      }
+    ],
+    "rightApproach": "Ofrecer andamiajes visibles, modelos, conectores, borradores, revisión y retroalimentación para que el alumno construya su texto con apoyo gradual."
+  },
+  {
+    "case": "La escuela planea invitar a una persona experta para hablar sobre prevención de violencia. En segundo grado, el PDA incluye elaborar invitaciones y oficios de gestión para obtener recursos y espacios. El docente piensa redactar él mismo los oficios para ahorrar tiempo.",
+    "instruction": "¿Qué decisión favorece mejor el aprendizaje situado?",
+    "focus": "Aspecto: oficios de gestión, escritura funcional, destinatario real y participación estudiantil.",
+    "options": [
+      {
+        "text": "Redactar los oficios el docente y pedir a los alumnos copiarlos, porque al tratarse de comunicación formal no conviene arriesgar errores ante autoridades.",
+        "correct": false,
+        "feedback": "La comunicación real exige revisión, pero los estudiantes deben participar en la escritura para aprender estructura, tono, propósito y destinatario."
+      },
+      {
+        "text": "Analizar ejemplos de oficios e invitaciones, identificar propósito y destinatario, escribir borradores por equipos, revisar formalidad y claridad, y enviar una versión final validada por el docente y la escuela.",
+        "correct": true,
+        "feedback": "Es correcta porque convierte una necesidad real en práctica de escritura funcional con acompañamiento."
+      },
+      {
+        "text": "Sustituir oficios por mensajes de WhatsApp, porque son más rápidos y cercanos al lenguaje cotidiano del alumnado.",
+        "correct": false,
+        "feedback": "Puede haber comunicación digital, pero el PDA exige gestionar con textos formales. La cercanía no debe eliminar el aprendizaje de registros y géneros formales."
+      },
+      {
+        "text": "Pedir que investiguen qué es un oficio y respondan un cuestionario, dejando la gestión a dirección escolar.",
+        "correct": false,
+        "feedback": "Saber la definición no equivale a usar el género en una situación comunicativa real."
+      }
+    ],
+    "rightApproach": "Trabajar géneros funcionales mediante modelos, borradores, revisión, validación institucional y uso real de los textos para gestionar espacios o recursos."
+  },
+  {
+    "case": "En una actividad de lectura, una estudiante lee con mucha lentitud y sus compañeros se impacientan. El docente quiere fortalecer convivencia e inclusión sin hacer evidente la dificultad de la alumna.",
+    "instruction": "¿Qué acción es más adecuada?",
+    "focus": "Aspecto: lectura inclusiva, clima de aula, apoyo entre pares y respeto.",
+    "options": [
+      {
+        "text": "Evitar que la alumna vuelva a leer en voz alta y asignarle tareas escritas, para no exponerla a burlas o ansiedad.",
+        "correct": false,
+        "feedback": "La protección no debe transformarse en exclusión. Deben ofrecerse formas graduales y seguras de participar."
+      },
+      {
+        "text": "Implementar lectura compartida, lectura previa, turnos voluntarios y breves, parejas solidarias, acuerdos de respeto y actividades de comprensión que no dependan sólo de velocidad lectora.",
+        "correct": true,
+        "feedback": "Es correcta porque reduce barreras, cuida el clima y mantiene el acceso al aprendizaje."
+      },
+      {
+        "text": "Pedir al grupo paciencia y continuar igual, porque enfrentarse a la lectura pública es la mejor manera de mejorar fluidez.",
+        "correct": false,
+        "feedback": "La paciencia es importante, pero sin estrategias de apoyo puede mantenerse la barrera y aumentar la ansiedad."
+      },
+      {
+        "text": "Evaluar con menor exigencia a la alumna y no registrar errores de lectura, para evitar afectar su autoestima.",
+        "correct": false,
+        "feedback": "La evaluación debe apoyar avance con criterios pertinentes, no desaparecer el aprendizaje ni bajar expectativas sin andamiaje."
+      }
+    ],
+    "rightApproach": "Crear condiciones seguras para la lectura con apoyos, modalidades variadas, acuerdos de respeto y evaluación centrada en comprensión y progreso."
+  },
+  {
+    "case": "El grupo de primer grado debe elaborar una propuesta oral o escrita para promover acciones que ayuden a erradicar la violencia en la escuela. Algunos estudiantes proponen nombrar públicamente a quienes 'se portan mal' para que cambien.",
+    "instruction": "¿Qué orientación docente es más adecuada desde cultura de paz?",
+    "focus": "Aspecto: prevención de violencia, propuesta colectiva, enfoque restaurativo y no estigmatización.",
+    "options": [
+      {
+        "text": "Aceptar la propuesta porque exhibir conductas negativas puede generar presión social y disminuir la violencia.",
+        "correct": false,
+        "feedback": "Exhibir personas puede aumentar estigma, conflicto y violencia. La propuesta debe centrarse en conductas, acuerdos, prevención y reparación, no en humillación."
+      },
+      {
+        "text": "Redirigir la propuesta hacia acciones preventivas: acuerdos de trato, canales de ayuda, mensajes asertivos, mediación, cuidado de la víctima, responsabilidades y seguimiento sin señalar públicamente a personas.",
+        "correct": true,
+        "feedback": "Es correcta porque promueve cultura de paz, protección, responsabilidad y comunicación asertiva sin revictimizar ni estigmatizar."
+      },
+      {
+        "text": "Desechar el tema de violencia y cambiar a un contenido literario, porque las propuestas disciplinarias corresponden sólo al reglamento escolar.",
+        "correct": false,
+        "feedback": "Español puede abordar la violencia mediante propuestas orales o escritas, diálogo, argumentación y comunicación para la convivencia."
+      },
+      {
+        "text": "Pedir que cada estudiante escriba en secreto el nombre de quienes generan conflictos para entregar la lista a dirección.",
+        "correct": false,
+        "feedback": "Puede ser una vía de reporte si hay riesgo, pero no sustituye una propuesta didáctica ni garantiza debido proceso. Debe seguirse protocolo y evitar prácticas de señalamiento sin seguimiento adecuado."
+      }
+    ],
+    "rightApproach": "Orientar la propuesta hacia prevención, acuerdos, canales de apoyo, mediación, protección y seguimiento, evitando exhibición o estigmatización de estudiantes."
+  },
+  {
+    "case": "El docente desea que el grupo de segundo grado adapte un cuento a otro lenguaje para sensibilizar a la comunidad sobre la relevancia social de la literatura. Algunos alumnos quieren cambiar sólo el formato a diapositivas con imágenes copiadas.",
+    "instruction": "¿Qué criterio debe guiar la adaptación?",
+    "focus": "Aspecto: adaptación de textos literarios a otros lenguajes, recursos estéticos y sentido social.",
+    "options": [
+      {
+        "text": "Evaluar que las diapositivas sean atractivas, porque adaptar a otro lenguaje consiste principalmente en cambiar el soporte visual del texto.",
+        "correct": false,
+        "feedback": "Cambiar soporte no basta. Adaptar implica tomar decisiones de sentido, recursos expresivos, lenguaje, audiencia y propósito."
+      },
+      {
+        "text": "Analizar el cuento, identificar tema, conflicto y recursos estéticos, decidir qué elementos conservar o transformar, crear guion, audio, dramatización o imagen con créditos, y justificar cómo sensibiliza a la comunidad.",
+        "correct": true,
+        "feedback": "Es correcta porque comprende la adaptación como reinterpretación creativa y responsable, no sólo como cambio de formato."
+      },
+      {
+        "text": "Pedir una lectura en voz alta del cuento original sin modificaciones, porque alterar textos literarios puede perder su valor estético.",
+        "correct": false,
+        "feedback": "La lectura puede ser parte del proceso, pero el PDA implica adaptar a otros lenguajes y sensibilizar a la comunidad."
+      },
+      {
+        "text": "Permitir que cada equipo copie imágenes de internet si menciona la fuente, pues lo importante es que el mensaje literario se entienda rápidamente.",
+        "correct": false,
+        "feedback": "Además de citar, deben cuidar derechos, pertinencia estética y creación propia. La adaptación requiere decisiones creativas y éticas."
+      }
+    ],
+    "rightApproach": "Guiar la adaptación mediante análisis literario, decisiones de transformación, uso ético de recursos, guion o producto creativo y justificación del efecto en la comunidad."
+  },
+  {
+    "case": "En un Consejo Técnico, se discute si Español debe evaluar únicamente aprendizajes disciplinares o también considerar inclusión, participación y convivencia. Algunos docentes temen que incluir esos aspectos haga subjetiva la evaluación.",
+    "instruction": "¿Qué postura equilibra mejor evaluación formativa y logro de contenidos?",
+    "focus": "Aspecto: evaluación integral, criterios observables, inclusión y aprendizaje disciplinar.",
+    "options": [
+      {
+        "text": "Evaluar sólo conocimientos disciplinares para evitar subjetividad; la inclusión y convivencia deben tratarse como observaciones aparte sin relación con los productos de Español.",
+        "correct": false,
+        "feedback": "Los aprendizajes de Lenguajes implican interacción, diálogo, participación y comunicación. Es posible evaluar estos aspectos con criterios claros vinculados al PDA."
+      },
+      {
+        "text": "Evaluar principalmente actitud y participación, porque la NEM prioriza valores y formación humana por encima del dominio de textos y géneros.",
+        "correct": false,
+        "feedback": "La formación humana es central, pero no sustituye los contenidos. Debe integrarse al logro de prácticas de lectura, escritura, oralidad y análisis."
+      },
+      {
+        "text": "Definir criterios observables vinculados al PDA, como calidad del argumento, escucha, revisión de textos, uso de fuentes y trato respetuoso; usar evidencias diversas y retroalimentar tanto el producto como el proceso.",
+        "correct": true,
+        "feedback": "Es correcta porque integra aprendizaje disciplinar y dimensión formativa sin caer en subjetividad."
+      },
+      {
+        "text": "Asignar una calificación grupal única al proyecto para reforzar colaboración y evitar comparaciones individuales.",
+        "correct": false,
+        "feedback": "La colaboración se evalúa, pero cada estudiante requiere retroalimentación sobre su propio avance. Una nota única puede ocultar desigualdades de participación."
+      }
+    ],
+    "rightApproach": "Evaluar con criterios claros y evidencias variadas, vinculando el logro de contenidos/PDA con procesos de participación, inclusión, convivencia y mejora."
+  },
+  {
+    "category": "Identificación de conceptos didácticos",
+    "case": "Durante una reunión de academia de Español, una maestra presenta lo siguiente: 'A partir de comentarios discriminatorios observados en el recreo, el grupo leerá testimonios y artículos de opinión, identificará posturas, dialogará con reglas de escucha, redactará una carta argumentativa dirigida al comité de convivencia y revisará sus borradores con coevaluación'. Varios docentes discuten si eso es una metodología, una estrategia aislada, una situación didáctica o una planeación completa.",
+    "instruction": "¿Cómo debe identificarse principalmente el planteamiento presentado?",
+    "focus": "Aspecto: situación didáctica, práctica social del lenguaje, problema contextualizado y evaluación formativa.",
+    "options": [
+      {
+        "text": "Es principalmente una situación didáctica, porque plantea un contexto real, un propósito comunicativo, acciones articuladas de lectura, oralidad y escritura, y evidencias para movilizar saberes hacia un aprendizaje situado.",
+        "correct": true,
+        "feedback": "La opción es correcta porque reconoce el núcleo del planteamiento: un escenario intencionado de aprendizaje que articula problema, contenido, PDA, actividades y producto comunicativo. Puede integrarse en una planeación, pero no equivale por sí sola a todo el documento de planeación."
+      },
+      {
+        "text": "Es una metodología, porque contiene varias actividades y concluye con un producto social; por ello debe considerarse Aprendizaje Servicio aunque no se mencionen diagnóstico de necesidades ni servicio comunitario sostenido.",
+        "correct": false,
+        "feedback": "Que haya actividades y producto social no basta para clasificarlo como metodología. Para identificar una metodología debe observarse una ruta amplia con fases y propósitos propios, por ejemplo proyecto comunitario, ABP, indagación o Aprendizaje Servicio."
+      },
+      {
+        "text": "Es una estrategia didáctica aislada, porque la lectura de testimonios y la coevaluación son recursos que el docente decide usar durante una clase sin relación necesaria con contenidos y PDA.",
+        "correct": false,
+        "feedback": "El planteamiento no es una acción aislada. Integra problema, propósito, secuencia de acciones, producto y evaluación; por eso rebasa la idea de una técnica o estrategia puntual."
+      },
+      {
+        "text": "Es una planeación completa, porque ya contiene problema, lecturas, diálogo, escritura, coevaluación y destinatario; no requiere precisar tiempos, recursos, criterios, ajustes de inclusión ni seguimiento.",
+        "correct": false,
+        "feedback": "Aunque contiene elementos clave, una planeación requiere organizar tiempos, recursos, criterios, momentos, atención a barreras, instrumentos de evaluación y formas de retroalimentación."
+      }
+    ],
+    "rightApproach": "Distinguir que una situación didáctica es un escenario de aprendizaje intencionado y contextualizado; puede formar parte de una planeación y apoyarse en estrategias, pero no necesariamente define por sí sola una metodología completa."
+  },
+  {
+    "category": "Identificación de conceptos didácticos",
+    "case": "Un docente afirma: 'Mi metodología será hacer lluvia de ideas, subrayado, lectura en voz alta y una tabla comparativa'. Otra docente señala que esas acciones pueden ser útiles, pero no constituyen por sí mismas una metodología de trabajo por proyectos ni un enfoque sociocrítico.",
+    "instruction": "¿Cuál opción diferencia mejor metodología y estrategia didáctica?",
+    "focus": "Aspecto: metodología, estrategia didáctica, técnicas y coherencia pedagógica.",
+    "options": [
+      {
+        "text": "La metodología es la ruta amplia que organiza el proceso con fases, sentido formativo y relación con el problema; las estrategias son acciones específicas para facilitar aprendizajes dentro de esa ruta.",
+        "correct": true,
+        "feedback": "Es correcta porque distingue el nivel de organización. Una metodología como proyecto comunitario, ABP, indagación o Aprendizaje Servicio estructura el proceso; las estrategias concretas apoyan momentos específicos."
+      },
+      {
+        "text": "Metodología y estrategia didáctica son equivalentes: ambas se refieren a cualquier actividad que el docente realiza para mantener ocupado al grupo.",
+        "correct": false,
+        "feedback": "No son equivalentes. Reducirlas a ocupación del grupo desconecta la práctica de los contenidos, PDA, evaluación e intencionalidad pedagógica."
+      },
+      {
+        "text": "La estrategia didáctica es siempre superior a la metodología, porque se aplica directamente en el aula, mientras que la metodología sólo aparece en documentos oficiales.",
+        "correct": false,
+        "feedback": "La metodología no es un requisito burocrático; orienta decisiones reales de enseñanza y aprendizaje. Las estrategias se subordinan al propósito y a la ruta metodológica elegida."
+      },
+      {
+        "text": "La metodología se limita a definir el producto final, mientras que la estrategia didáctica define los aprendizajes esperados y los procesos de desarrollo de aprendizaje.",
+        "correct": false,
+        "feedback": "El producto final no define por sí mismo una metodología. Además, los contenidos y PDA provienen del análisis curricular y se contextualizan en el Programa Analítico y la planeación didáctica."
+      }
+    ],
+    "rightApproach": "Nombrar correctamente los componentes de la práctica: metodología como ruta general; estrategia como acción deliberada; técnica o recurso como procedimiento puntual; todo alineado con contenido, PDA, contexto y evaluación."
+  },
+  {
+    "category": "Planeación didáctica",
+    "case": "Para segundo grado, una docente elige el contenido relacionado con la comunicación asertiva y plantea una clase de 50 minutos: leer una definición, copiarla, responder cinco preguntas y entregar la libreta. Argumenta que eso ya es una planeación porque contiene tema, actividad y producto.",
+    "instruction": "¿Qué decisión permitiría transformar esa propuesta en una planeación didáctica más congruente con la NEM?",
+    "focus": "Aspecto: planeación didáctica, PDA, propósito, inclusión y evaluación formativa.",
+    "options": [
+      {
+        "text": "Agregar portada, datos de identificación y una rúbrica con valor numérico, manteniendo la copia y el cuestionario como única evidencia para evitar dispersión.",
+        "correct": false,
+        "feedback": "Los datos administrativos y la rúbrica no bastan. La propuesta sigue centrada en reproducción de información y no moviliza lectura, oralidad, diálogo ni reflexión sobre una situación comunicativa real."
+      },
+      {
+        "text": "Redefinir el propósito a partir del PDA, plantear una situación real de interacción, prever actividades de análisis, diálogo, producción y revisión, incluir apoyos para distintos ritmos y establecer retroalimentación durante el proceso.",
+        "correct": true,
+        "feedback": "Es correcta porque convierte el tema en una experiencia de aprendizaje con sentido, criterios, acompañamiento, inclusión y evidencias vinculadas al proceso."
+      },
+      {
+        "text": "Mantener la clase como está, pero pedir que el estudiantado trabaje en equipos para que automáticamente exista inclusión y aprendizaje colaborativo.",
+        "correct": false,
+        "feedback": "El trabajo en equipo no garantiza inclusión ni colaboración. Requiere roles, apoyos, criterios, seguimiento y una tarea que exija interacción significativa."
+      },
+      {
+        "text": "Cambiar el tema por uno de mayor interés para el grupo, aunque no esté vinculado con los contenidos de Español ni con los PDA del grado.",
+        "correct": false,
+        "feedback": "El interés del grupo es importante, pero debe dialogar con los contenidos y PDA. La contextualización no implica abandonar el programa, sino hacerlo pertinente."
+      }
+    ],
+    "rightApproach": "Una planeación didáctica debe articular contexto, contenido/PDA, propósito, situación, metodología o secuencia, estrategias, recursos, inclusión, evaluación formativa y evidencias de aprendizaje."
+  },
+  {
+    "category": "Evaluación formativa",
+    "case": "Durante la revisión de reseñas literarias, el docente marca con rojo todos los errores ortográficos y escribe al final: 'Mejorar redacción'. Varios alumnos no modifican sus textos porque no entienden qué cambiar ni cómo avanzar en el juicio crítico sobre la obra.",
+    "instruction": "¿Cuál opción representa con mayor precisión una intervención de evaluación formativa?",
+    "focus": "Aspecto: retroalimentación, error como oportunidad, criterios y metacognición.",
+    "options": [
+      {
+        "text": "Sustituir las marcas rojas por una escala de 1 a 10 para no afectar la autoestima y permitir que cada estudiante interprete por sí mismo su avance.",
+        "correct": false,
+        "feedback": "Evitar comentarios no mejora el aprendizaje. La evaluación formativa requiere información comprensible para que el estudiante tome decisiones y mejore su producción."
+      },
+      {
+        "text": "Dar una devolución específica sobre tesis, evidencias, estructura de la reseña, registro y ortografía priorizada; pedir al alumno explicar qué ajuste realizará y permitir reescritura con acompañamiento.",
+        "correct": true,
+        "feedback": "Es correcta porque la retroalimentación es clara, útil, dialógica y orientada a la mejora. Además, trabaja el error como parte del proceso y promueve metacognición."
+      },
+      {
+        "text": "Corregir personalmente el texto del alumno y entregarle la versión final, porque así observa un modelo adecuado y se evita que repita errores.",
+        "correct": false,
+        "feedback": "El modelo puede apoyar, pero si el docente resuelve todo, el estudiante pierde oportunidad de reflexionar, tomar decisiones y apropiarse del proceso de escritura."
+      },
+      {
+        "text": "Calificar solamente la ortografía, porque es el indicador más objetivo y permite comparar con justicia a todos los estudiantes.",
+        "correct": false,
+        "feedback": "La ortografía es sólo un aspecto. En una reseña literaria deben considerarse comprensión, valoración crítica, organización, argumentos, voz, destinatario y revisión."
+      }
+    ],
+    "rightApproach": "La evaluación formativa debe integrarse al proceso, brindar retroalimentación específica, favorecer autoevaluación y coevaluación, y permitir reescritura o mejora con base en criterios compartidos."
+  },
+  {
+    "category": "Metodologías sociocríticas",
+    "case": "El grupo detecta que los avisos escolares no llegan a todos los estudiantes, especialmente a quienes tienen baja visión o dificultades lectoras. En Español, proponen analizar formatos de avisos, entrevistar a compañeros, diseñar mensajes accesibles y difundirlos para mejorar la comunicación escolar.",
+    "instruction": "¿Qué metodología se ajusta mejor si el énfasis está en atender una necesidad real de la comunidad escolar mediante un servicio comunicativo?",
+    "focus": "Aspecto: Aprendizaje Servicio, accesibilidad comunicativa, comunidad e inclusión.",
+    "options": [
+      {
+        "text": "Aprendizaje Servicio, porque articula el estudio académico de los mensajes escolares con una acción concreta de servicio que mejora la comunicación y favorece la participación de la comunidad.",
+        "correct": true,
+        "feedback": "La opción es correcta. El énfasis está en aprender Español mediante un servicio real: diseñar y difundir mensajes accesibles que respondan a una necesidad comunitaria."
+      },
+      {
+        "text": "Aprendizaje basado en indagación STEAM, porque toda entrevista y recolección de datos convierte la actividad en una investigación científica interdisciplinaria.",
+        "correct": false,
+        "feedback": "Puede haber indagación, pero el centro del caso no es explicar un fenómeno mediante evidencia científica, sino ofrecer un servicio comunicativo a la comunidad."
+      },
+      {
+        "text": "Exposición magistral, porque la accesibilidad debe explicarse primero de manera teórica y después comprobarse mediante un examen individual.",
+        "correct": false,
+        "feedback": "La teoría es importante, pero el caso exige acción situada, participación, diseño de productos comunicativos y evaluación de impacto en la comunidad escolar."
+      },
+      {
+        "text": "Secuencia de ejercicios gramaticales, porque los avisos escolares sólo requieren corregir sintaxis y ortografía antes de publicarse.",
+        "correct": false,
+        "feedback": "La corrección lingüística importa, pero la accesibilidad comunicativa implica destinatario, formato, claridad, recursos visuales, oralidad, inclusión y uso social del lenguaje."
+      }
+    ],
+    "rightApproach": "Cuando el aprendizaje disciplinar se vincula con una necesidad comunitaria y una acción de servicio real, la metodología más pertinente puede ser Aprendizaje Servicio."
+  },
+  {
+    "category": "Metodologías sociocríticas",
+    "case": "En tercer grado, los estudiantes se preguntan por qué ciertos mensajes de redes sociales influyen más en sus decisiones de consumo. El docente propone formular preguntas, recopilar ejemplos, analizar recursos persuasivos, contrastar datos y presentar conclusiones sobre la influencia del lenguaje digital.",
+    "instruction": "¿Qué tipo de abordaje se identifica principalmente?",
+    "focus": "Aspecto: aprendizaje basado en indagación, análisis de información y lenguaje digital.",
+    "options": [
+      {
+        "text": "Aprendizaje basado en indagación, porque inicia con preguntas, reúne evidencias, analiza información y construye explicaciones o conclusiones a partir de datos del contexto.",
+        "correct": true,
+        "feedback": "Es correcta. El núcleo es investigar una pregunta con evidencias y organizar conclusiones, aunque el producto final pueda ser comunicativo."
+      },
+      {
+        "text": "Evaluación formativa, porque el docente observa el avance del grupo y puede asignar una calificación al final del proceso.",
+        "correct": false,
+        "feedback": "La evaluación formativa puede acompañar el proceso, pero no define la metodología principal del caso. Aquí el rasgo central es la indagación."
+      },
+      {
+        "text": "Aprendizaje Servicio, porque todo análisis de redes sociales beneficia a la comunidad aunque no exista una acción de servicio definida.",
+        "correct": false,
+        "feedback": "Para Aprendizaje Servicio se requiere una necesidad comunitaria y una acción de servicio explícita, no sólo analizar un tema social."
+      },
+      {
+        "text": "Planeación analítica, porque se parte de una pregunta y se seleccionan contenidos del Programa Sintético.",
+        "correct": false,
+        "feedback": "La planeación puede contener ese proceso, pero el planteamiento describe un abordaje metodológico de indagación, no el Programa Analítico."
+      }
+    ],
+    "rightApproach": "Identificar la metodología por su lógica central: preguntas, evidencias, análisis y conclusiones remiten a indagación; servicio real remite a Aprendizaje Servicio; problema y solución argumentada remiten a ABP."
+  },
+  {
+    "category": "Programa Analítico y codiseño",
+    "case": "En Consejo Técnico, el colectivo acuerda que en Español se trabajarán textos argumentativos sobre convivencia porque el diagnóstico muestra conflictos verbales y baja escucha. Sin embargo, un docente afirma que no se puede ajustar nada porque el Programa Sintético ya determina exactamente el orden y la forma de abordar cada contenido.",
+    "instruction": "¿Qué respuesta refleja mejor el sentido del Programa Analítico y el codiseño?",
+    "focus": "Aspecto: Programa Analítico, lectura de la realidad, contextualización y autonomía profesional.",
+    "options": [
+      {
+        "text": "El Programa Sintético debe copiarse sin modificaciones, pues contextualizar podría alterar la igualdad nacional del currículo.",
+        "correct": false,
+        "feedback": "La igualdad curricular no significa homogeneizar la enseñanza. El Programa Sintético es punto de partida y requiere contextualización según la realidad escolar."
+      },
+      {
+        "text": "El colectivo puede decidir secuenciación, contextualización, articulación con ejes y metodologías, manteniendo la esencia de contenidos y PDA y revisando el Programa Analítico de manera dinámica.",
+        "correct": true,
+        "feedback": "Es correcta. El codiseño parte de la lectura de la realidad, contextualiza contenidos y organiza la ruta de trabajo sin abandonar los elementos curriculares comunes."
+      },
+      {
+        "text": "Cada docente debe elaborar su propio programa sin consultar al colectivo, porque la autonomía profesional es individual y no requiere acuerdos de escuela.",
+        "correct": false,
+        "feedback": "La autonomía profesional no elimina el trabajo colegiado. El Programa Analítico se construye en colectivo y se ajusta conforme a la realidad escolar."
+      },
+      {
+        "text": "La problemática de convivencia debe atenderse únicamente en Tutoría, pues Español no puede incorporar asuntos sociales sin perder rigor disciplinar.",
+        "correct": false,
+        "feedback": "Lenguajes puede abordar convivencia mediante oralidad, diálogo, argumentación, lectura crítica y producción de textos. La integración curricular no elimina el rigor; le da sentido."
+      }
+    ],
+    "rightApproach": "El Programa Analítico contextualiza y organiza contenidos/PDA con base en la lectura de la realidad, los ejes articuladores, las necesidades del grupo y las decisiones colegiadas."
+  },
+  {
+    "category": "Contenido y PDA",
+    "case": "Una maestra escribe en su planeación: 'Contenido: que el alumno participe en debates con argumentos claros'. En revisión colegiada le señalan que probablemente está confundiendo contenido con Proceso de Desarrollo de Aprendizaje.",
+    "instruction": "¿Cuál explicación es más precisa?",
+    "focus": "Aspecto: diferencia entre contenido y PDA en Español Fase 6.",
+    "options": [
+      {
+        "text": "El contenido nombra el saber, práctica o problema del campo formativo; el PDA describe el recorrido o desempeño mediante el cual el estudiante se apropia de ese aprendizaje en determinado grado.",
+        "correct": true,
+        "feedback": "Es correcta porque distingue el objeto de aprendizaje del proceso/desempeño esperado. Ambos se articulan, pero no son lo mismo."
+      },
+      {
+        "text": "El contenido es la actividad que hará el docente y el PDA es el material que usará el alumno para realizarla.",
+        "correct": false,
+        "feedback": "Actividad y material pertenecen a la planeación didáctica; no equivalen a contenido ni a PDA."
+      },
+      {
+        "text": "El contenido se evalúa con calificación numérica y el PDA se evalúa únicamente con observaciones de actitud.",
+        "correct": false,
+        "feedback": "Tanto contenidos como PDA requieren evidencias de aprendizaje. La evaluación debe considerar desempeño, proceso, producto y participación según criterios pertinentes."
+      },
+      {
+        "text": "Contenido y PDA son sinónimos, por lo que no importa cómo se nombren mientras el docente realice una actividad atractiva.",
+        "correct": false,
+        "feedback": "Confundirlos dificulta planear, evaluar y asegurar progresión por grado. La actividad atractiva debe estar alineada con contenidos y PDA."
+      }
+    ],
+    "rightApproach": "El docente debe seleccionar el contenido y el PDA correspondiente al grado, contextualizarlos y traducirlos en situaciones, estrategias y evidencias de aprendizaje."
+  },
+  {
+    "category": "Inclusión y equidad",
+    "case": "En una lectura dramatizada, un alumno con tartamudez pide no participar porque teme burlas. El docente desea sostener el PDA de oralidad y expresión, pero también garantizar inclusión, trato digno y seguridad emocional.",
+    "instruction": "¿Qué intervención es más pertinente?",
+    "focus": "Aspecto: inclusión, ajustes razonables, oralidad, convivencia y participación gradual.",
+    "options": [
+      {
+        "text": "Exigirle leer el papel principal para que supere el miedo, aclarando al grupo que quien se burle tendrá sanción inmediata.",
+        "correct": false,
+        "feedback": "Forzar la exposición puede aumentar la ansiedad y no constituye un ajuste razonable. La prevención de burlas es necesaria, pero debe acompañarse de participación gradual y apoyos."
+      },
+      {
+        "text": "Excluirlo de la actividad oral y asignarle únicamente elaborar la portada, para evitar riesgos emocionales y mantener la fluidez de la representación.",
+        "correct": false,
+        "feedback": "Proteger no debe equivaler a excluir del aprendizaje. El reto es eliminar barreras y ofrecer formas de participación acordes con el PDA."
+      },
+      {
+        "text": "Acordar con el alumno una participación gradual, ofrecer opciones como lectura coral, audio grabado, narrador compartido o apoyo visual, trabajar acuerdos de respeto y retroalimentar la expresión sin ridiculizar.",
+        "correct": true,
+        "feedback": "Es correcta porque conserva el aprendizaje de oralidad, reduce barreras, cuida la dignidad y promueve una cultura de respeto."
+      },
+      {
+        "text": "Cambiar la actividad por un cuestionario escrito para todo el grupo, porque la oralidad genera desigualdad entre estudiantes con distintas habilidades comunicativas.",
+        "correct": false,
+        "feedback": "La diversidad de habilidades no justifica cancelar la oralidad. Debe diseñarse con apoyos y opciones de participación."
+      }
+    ],
+    "rightApproach": "La inclusión exige mantener altas expectativas con apoyos adecuados, opciones de expresión, acuerdos de convivencia y retroalimentación respetuosa."
+  },
+  {
+    "category": "Protocolos y convivencia",
+    "case": "Después de una exposición, circula en un chat del grupo un meme que ridiculiza la forma de hablar de una alumna. Algunos estudiantes dicen que 'sólo fue broma'. El docente de Español piensa usar el caso para trabajar lenguaje, convivencia y prevención de violencia digital.",
+    "instruction": "¿Cuál actuación docente es más adecuada?",
+    "focus": "Aspecto: ciberacoso, protocolo escolar, lenguaje respetuoso, protección e intervención pedagógica.",
+    "options": [
+      {
+        "text": "Pedir a la alumna afectada que explique frente al grupo cómo se sintió para que sus compañeros reflexionen y aprendan de la consecuencia de sus actos.",
+        "correct": false,
+        "feedback": "Puede revictimizarla. La reflexión grupal es necesaria, pero debe protegerse a la persona afectada y evitar exponerla sin consentimiento ni cuidado."
+      },
+      {
+        "text": "Registrar la situación, informar a la autoridad escolar conforme al protocolo, proteger a la alumna, evitar la difusión del material, trabajar acuerdos de comunicación respetuosa y abordar el uso ético del lenguaje digital.",
+        "correct": true,
+        "feedback": "Es correcta porque combina actuación institucional, protección, prevención de revictimización y aprovechamiento didáctico del tema sin trivializar la violencia."
+      },
+      {
+        "text": "Ignorar el chat porque ocurrió fuera del horario de clase y no debe mezclarse con la evaluación de Español.",
+        "correct": false,
+        "feedback": "La violencia digital puede afectar la convivencia y el aprendizaje. El docente debe canalizar y atender conforme a la escuela, además de trabajar el uso responsable del lenguaje."
+      },
+      {
+        "text": "Organizar una mediación directa entre la alumna y quienes compartieron el meme, exigiendo que se pidan disculpas públicas para cerrar el caso rápidamente.",
+        "correct": false,
+        "feedback": "La mediación no siempre es pertinente cuando hay violencia o asimetría. Se requiere protocolo, protección, seguimiento y reparación sin presionar a la persona afectada."
+      }
+    ],
+    "rightApproach": "Ante posibles casos de acoso o violencia digital, la práctica docente debe proteger, registrar, canalizar según protocolo, evitar revictimización y promover aprendizaje ético sobre el lenguaje y la convivencia."
+  },
+  {
+    "category": "Didáctica crítica",
+    "case": "Al trabajar noticias sobre escasez de agua, el docente de Español pide identificar titular, entrada y cuerpo. El grupo cumple, pero no discute fuentes, intereses, lenguaje persuasivo ni consecuencias para la comunidad.",
+    "instruction": "¿Qué ajuste expresa mejor una didáctica crítica en Lenguajes?",
+    "focus": "Aspecto: didáctica crítica, lectura de la realidad, análisis discursivo y participación social.",
+    "options": [
+      {
+        "text": "Mantener el análisis estructural y agregar una lista de conectores, porque la didáctica crítica consiste en dominar primero la forma lingüística antes de opinar sobre la realidad.",
+        "correct": false,
+        "feedback": "La forma textual es importante, pero si se aísla de la realidad, las fuentes, los intereses y el diálogo social, se limita la dimensión crítica del campo."
+      },
+      {
+        "text": "Analizar estructura, fuentes, postura, omisiones, recursos del lenguaje y efectos en la comunidad; contrastar textos y producir una respuesta comunicativa argumentada para un destinatario real.",
+        "correct": true,
+        "feedback": "Es correcta porque integra análisis textual con problematización de la realidad y participación comunicativa informada."
+      },
+      {
+        "text": "Sustituir las noticias por definiciones neutrales de conceptos ambientales para evitar controversias y garantizar que todos memoricen la misma información.",
+        "correct": false,
+        "feedback": "La neutralidad aparente puede ocultar problemas reales. La didáctica crítica promueve análisis, diálogo, argumentos y lectura de situaciones socialmente relevantes."
+      },
+      {
+        "text": "Solicitar opiniones libres sin revisar textos ni fuentes, porque el pensamiento crítico depende principalmente de que cada alumno diga lo que siente.",
+        "correct": false,
+        "feedback": "La opinión debe sustentarse en lectura, evidencia y diálogo. Sin análisis de textos y fuentes, se reduce a impresiones personales."
+      }
+    ],
+    "rightApproach": "La didáctica crítica vincula saberes escolares con asuntos de la vida real, promueve análisis de discursos, diálogo argumentado, acción comunicativa y reflexión sobre el propio aprendizaje."
+  },
+  {
+    "category": "Estrategias didácticas",
+    "case": "En primer grado, varios estudiantes entregan narraciones sin coherencia temporal ni descripción de personajes. La docente planea enseñar recursos narrativos sin convertir la clase en explicación prolongada.",
+    "instruction": "¿Cuál opción es una estrategia didáctica pertinente y no sólo un instrumento de evaluación?",
+    "focus": "Aspecto: estrategia didáctica, andamiaje, escritura narrativa y progresión del aprendizaje.",
+    "options": [
+      {
+        "text": "Usar una lista de cotejo final para marcar si el texto tiene inicio, desarrollo y cierre, sin revisar borradores ni modelar cómo mejorar la narración.",
+        "correct": false,
+        "feedback": "La lista de cotejo es un instrumento de evaluación; puede apoyar, pero no es por sí misma una estrategia de enseñanza si no se usa para orientar el proceso."
+      },
+      {
+        "text": "Modelar un fragmento narrativo, identificar con el grupo marcas temporales y rasgos de personajes, construir un organizador de secuencia y acompañar la reescritura por pares.",
+        "correct": true,
+        "feedback": "Es correcta porque describe acciones deliberadas para enseñar y acompañar el aprendizaje: modelado, análisis, organizador, colaboración y revisión."
+      },
+      {
+        "text": "Reducir la narración a copiar un cuento breve para que internalicen la estructura antes de escribir una producción propia.",
+        "correct": false,
+        "feedback": "Copiar puede familiarizar con textos, pero no garantiza apropiación de recursos narrativos ni producción con sentido personal o comunitario."
+      },
+      {
+        "text": "Calificar la creatividad de cada texto de manera global, porque los recursos narrativos se desarrollan espontáneamente cuando el alumno escribe con libertad.",
+        "correct": false,
+        "feedback": "La libertad creativa necesita acompañamiento. La estrategia debe ayudar a comprender y usar recursos concretos del género narrativo."
+      }
+    ],
+    "rightApproach": "Una estrategia didáctica pertinente proporciona andamiaje para que el estudiante avance: modela, guía, organiza, permite práctica, interacción, revisión y mejora."
+  },
+  {
+    "category": "Instrumentos y evidencias",
+    "case": "Para evaluar un debate, el docente sólo registra quién habló más veces. Al revisar resultados, advierte que algunos alumnos intervinieron poco pero escucharon, tomaron notas y formularon preguntas pertinentes; otros hablaron mucho, pero interrumpieron y no sustentaron sus posturas.",
+    "instruction": "¿Qué ajuste fortalece la evaluación del PDA de oralidad y argumentación?",
+    "focus": "Aspecto: instrumentos de evaluación, criterios observables, equidad y oralidad.",
+    "options": [
+      {
+        "text": "Usar una rúbrica o lista de cotejo con criterios de pertinencia del argumento, uso de evidencias, escucha, respeto de turnos, preguntas y capacidad de reformular ideas, complementada con autoevaluación.",
+        "correct": true,
+        "feedback": "Es correcta porque amplía la evidencia y evita confundir participación con cantidad de intervenciones. Evalúa calidad comunicativa y convivencia democrática."
+      },
+      {
+        "text": "Mantener el conteo de participaciones porque es el dato más objetivo y evita valoraciones subjetivas sobre la calidad del argumento.",
+        "correct": false,
+        "feedback": "La objetividad no se logra midiendo sólo lo fácil de contar. Se requieren criterios claros para valorar el desempeño real esperado."
+      },
+      {
+        "text": "Calificar únicamente a quienes hablaron, porque escuchar o tomar notas no forma parte de la oralidad ni de la argumentación.",
+        "correct": false,
+        "feedback": "La oralidad incluye escucha, interacción, turnos, réplica, preguntas y construcción de sentido en comunidad."
+      },
+      {
+        "text": "Sustituir el debate por un examen escrito, ya que la oralidad es difícil de evaluar de manera justa.",
+        "correct": false,
+        "feedback": "La dificultad de evaluar oralidad exige mejores criterios e instrumentos, no cancelar el aprendizaje."
+      }
+    ],
+    "rightApproach": "Los instrumentos deben recoger evidencias diversas y criterios observables alineados al PDA, considerando calidad de interacción, argumentación, escucha e inclusión."
+  },
+  {
+    "category": "Integración de saberes",
+    "case": "El docente planea un proyecto sobre anuncios publicitarios de alimentos. Español analizará lenguaje persuasivo; Ciencias revisará información nutrimental; Artes apoyará el diseño visual. Un compañero sugiere que cada disciplina haga su producto por separado para evitar confusión.",
+    "instruction": "¿Qué decisión conserva mejor la integración curricular?",
+    "focus": "Aspecto: integración de saberes, campos formativos, eje Vida saludable y producto comunicativo.",
+    "options": [
+      {
+        "text": "Realizar tres tareas independientes y promediar las calificaciones, porque la integración curricular consiste en reunir evidencias de varias asignaturas en una carpeta común.",
+        "correct": false,
+        "feedback": "La integración no es acumulación de tareas. Debe haber un problema compartido, relaciones entre saberes y una producción con sentido."
+      },
+      {
+        "text": "Plantear una pregunta común sobre cómo influyen los anuncios en hábitos de consumo, articular análisis lingüístico, evidencia científica y diseño visual en mensajes dirigidos a la comunidad escolar.",
+        "correct": true,
+        "feedback": "Es correcta porque los saberes se relacionan en torno a un problema real y un propósito comunicativo común."
+      },
+      {
+        "text": "Permitir que Ciencias dirija todo el proyecto y Español sólo corrija ortografía al final, porque el tema de alimentación pertenece principalmente al campo científico.",
+        "correct": false,
+        "feedback": "Español aporta lectura crítica, discurso, argumentación, recursos persuasivos y producción de mensajes. No debe reducirse a corrección superficial."
+      },
+      {
+        "text": "Eliminar Artes y Ciencias para que Español conserve pureza disciplinar y evite mezclar contenidos que no pertenecen al campo Lenguajes.",
+        "correct": false,
+        "feedback": "La Fase 6 promueve integración de saberes. Mantener rigor disciplinar no significa aislar el conocimiento de problemas reales."
+      }
+    ],
+    "rightApproach": "Integrar saberes implica articular disciplinas alrededor de una problemática y una finalidad común, no sólo juntar productos; Español conserva su aporte específico al lenguaje y la comunicación."
+  },
+  {
+    "category": "Acuerdos y convivencia",
+    "case": "Antes de iniciar círculos de diálogo sobre discriminación lingüística, el grupo suele interrumpir, hacer bromas y usar apodos. El docente duda entre imponer reglas o construir acuerdos con el grupo.",
+    "instruction": "¿Cuál opción favorece mejor convivencia, inclusión y aprendizaje de oralidad?",
+    "focus": "Aspecto: acuerdos de convivencia, diálogo, inclusión y corresponsabilidad.",
+    "options": [
+      {
+        "text": "Construir acuerdos breves y claros sobre escucha, turnos, lenguaje respetuoso y reparación; explicar su sentido, modelarlos, usarlos durante el diálogo y revisarlos con el grupo al finalizar.",
+        "correct": true,
+        "feedback": "Es correcta porque los acuerdos se convierten en herramienta didáctica y ética: regulan la interacción, favorecen inclusión y permiten evaluar el proceso comunicativo."
+      },
+      {
+        "text": "Dictar un reglamento extenso y sancionar al primer estudiante que se equivoque, para que el resto comprenda que el diálogo requiere disciplina estricta.",
+        "correct": false,
+        "feedback": "La autoridad docente es necesaria, pero el exceso punitivo puede bloquear la participación y no enseña autorregulación ni corresponsabilidad."
+      },
+      {
+        "text": "Evitar acuerdos para que el diálogo sea espontáneo y revele la verdadera forma de pensar del grupo.",
+        "correct": false,
+        "feedback": "La espontaneidad sin cuidado puede reproducir violencia. El diálogo educativo requiere condiciones de seguridad, respeto y escucha."
+      },
+      {
+        "text": "Permitir bromas y apodos siempre que no impidan terminar la actividad, porque la convivencia juvenil debe respetar sus formas naturales de relación.",
+        "correct": false,
+        "feedback": "Normalizar apodos o burlas puede excluir. La inclusión exige revisar cómo el lenguaje afecta la dignidad y la participación."
+      }
+    ],
+    "rightApproach": "Los acuerdos de convivencia deben co-construirse, aplicarse y revisarse; no son adorno, sino condiciones para el aprendizaje de oralidad, argumentación, respeto e inclusión."
+  }
+
+];
+
+let current = 0;
+let teacherName = "";
+let selected = null;
+let answered = false;
+let results = [];
+let quizQuestions = [];
+
+function shuffleArray(arr){
+  const copy = [...arr];
+  for(let i = copy.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function prepareQuiz(){
+  quizQuestions = shuffleArray(JSON.parse(JSON.stringify(questions)));
+  quizQuestions = quizQuestions.map(q => ({...q, options: shuffleArray(q.options)}));
+  current = 0;
+  selected = null;
+  answered = false;
+  results = [];
+}
+
+function startQuiz(){
+  const name = document.getElementById('teacherInput').value.trim();
+  if(!name){
+    alert('Escriba el nombre del docente para iniciar.');
+    document.getElementById('teacherInput').focus();
+    return;
+  }
+  teacherName = name;
+  prepareQuiz();
+  document.getElementById('startScreen').classList.remove('active');
+  document.getElementById('quizScreen').classList.add('active');
+  document.getElementById('teacherLabel').textContent = 'Docente: ' + teacherName;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = quizQuestions[current];
+  selected = null;
+  answered = false;
+  document.getElementById('questionTitle').textContent = 'Pregunta ' + (current+1) + ')';
+  document.getElementById('caseText').textContent = q.case;
+  document.getElementById('instructionText').textContent = q.instruction;
+  document.getElementById('focusText').textContent = q.focus;
+  document.getElementById('progressText').textContent = 'Pregunta ' + (current+1) + ' de ' + quizQuestions.length;
+  document.getElementById('progressBar').style.width = ((current) / quizQuestions.length * 100) + '%';
+  document.getElementById('checkBtn').disabled = false;
+  document.getElementById('nextBtn').disabled = true;
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = '';
+  q.options.forEach((op, idx)=>{
+    const id = 'op_' + current + '_' + idx;
+    const label = document.createElement('label');
+    label.className = 'option';
+    label.setAttribute('for', id);
+    label.innerHTML = `<input type="radio" name="answer" id="${id}" value="${idx}"> <span>${op.text}</span>`;
+    label.addEventListener('click', ()=>{ if(!answered) selected = idx; });
+    box.appendChild(label);
+  });
+}
+
+function checkAnswer(){
+  const marked = document.querySelector('input[name="answer"]:checked');
+  if(!marked){
+    alert('Seleccione una opción antes de comprobar.');
+    return;
+  }
+  selected = Number(marked.value);
+  const q = quizQuestions[current];
+  const op = q.options[selected];
+  const correctIndex = q.options.findIndex(o=>o.correct);
+  const labels = Array.from(document.querySelectorAll('.option'));
+  labels.forEach((lab,idx)=>{
+    lab.querySelector('input').disabled = true;
+    if(idx === correctIndex) lab.classList.add('correct');
+    if(idx === selected && !op.correct) lab.classList.add('incorrect');
+  });
+  const fb = document.getElementById('feedback');
+  if(op.correct){
+    fb.className = 'feedback show good';
+    fb.innerHTML = `<strong>Respuesta correcta.</strong>${op.feedback}<div class="source-note"><b>Orientación:</b> ${q.rightApproach}</div>`;
+  }else{
+    fb.className = 'feedback show bad';
+    fb.innerHTML = `<strong>Respuesta incorrecta.</strong>${op.feedback}<div class="source-note"><b>Cómo debería abordarse:</b> ${q.rightApproach}<br><b>Opción correcta:</b> ${q.options[correctIndex].text}</div>`;
+  }
+  results[current] = {correct:op.correct, selected:selected, correctIndex:correctIndex};
+  answered = true;
+  document.getElementById('checkBtn').disabled = true;
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('progressBar').style.width = ((current+1) / quizQuestions.length * 100) + '%';
+}
+
+function nextQuestion(){
+  if(!answered) return;
+  if(current < quizQuestions.length - 1){
+    current++;
+    renderQuestion();
+  }else{
+    showResults();
+  }
+}
+
+function showResults(){
+  document.getElementById('quizScreen').classList.remove('active');
+  document.getElementById('resultScreen').classList.add('active');
+  const right = results.filter(r=>r && r.correct).length;
+  const wrong = quizQuestions.length - right;
+  const percent = Math.round((right / quizQuestions.length) * 100);
+  document.getElementById('resultTeacher').textContent = 'Docente: ' + teacherName;
+  document.getElementById('rightCount').textContent = right;
+  document.getElementById('wrongCount').textContent = wrong;
+  document.getElementById('percentCount').textContent = percent + '%';
+  const msg = document.getElementById('finalMessage');
+  let level = '';
+  if(percent >= 90) level = 'Excelente dominio de criterios didácticos, metodológicos y de evaluación para Español Fase 6.';
+  else if(percent >= 75) level = 'Buen avance. Conviene reforzar evaluación formativa, inclusión y contextualización de situaciones didácticas.';
+  else if(percent >= 60) level = 'Resultado suficiente. Se recomienda revisar con mayor detalle el Programa Sintético y fortalecer la toma de decisiones ante casos de aula.';
+  else level = 'Resultado en proceso. Es recomendable estudiar el enfoque de la NEM, la lectura de la realidad, la evaluación formativa y los contenidos de Español Fase 6.';
+  msg.innerHTML = `<h2>Valoración general</h2><p><b>Calificación:</b> ${percent}/100.</p><p>${level}</p><p><b>Recomendación:</b> revise las preguntas con error y vuelva a resolver el simulador, enfocándose en justificar cada decisión desde el contexto del grupo y el propósito comunicativo del aprendizaje.</p>`;
+  const categoryBox = document.getElementById('categorySummary');
+  const categoryStats = {};
+  quizQuestions.forEach((q,idx)=>{
+    const key = q.category || (q.focus ? q.focus.replace('Aspecto: ','').split(',')[0] : 'General');
+    if(!categoryStats[key]) categoryStats[key] = {total:0,right:0};
+    categoryStats[key].total++;
+    if(results[idx] && results[idx].correct) categoryStats[key].right++;
+  });
+  let catRows = Object.entries(categoryStats).map(([cat,st])=>`<tr><td>${cat}</td><td>${st.right}/${st.total}</td><td>${Math.round((st.right/st.total)*100)}%</td></tr>`).join('');
+  categoryBox.innerHTML = `<h2 style="margin-top:0;color:var(--guinda);font-size:18px">Resumen por aspecto de la práctica docente</h2><table class="summary-table"><thead><tr><th>Aspecto</th><th>Aciertos</th><th>Logro</th></tr></thead><tbody>${catRows}</tbody></table>`;
+  const review = document.getElementById('reviewBox');
+  review.innerHTML = '';
+  quizQuestions.forEach((q,idx)=>{
+    const r = results[idx];
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (r.correct ? 'ok':'fail');
+    div.innerHTML = `<h3>Pregunta ${idx+1}: ${r.correct ? 'Correcta' : 'Incorrecta'}</h3>
+      <p><b>Aspecto:</b> ${q.focus.replace('Aspecto: ','')}</p>
+      <p><b>Respuesta marcada:</b> ${q.options[r.selected].text}</p>
+      ${!r.correct ? `<p><b>Respuesta correcta:</b> ${q.options[r.correctIndex].text}</p>` : ''}
+      <p><b>Orientación:</b> ${q.rightApproach}</p>`;
+    review.appendChild(div);
+  });
+}
+
+function restartQuiz(){
+  current = 0;
+  selected = null;
+  answered = false;
+  results = [];
+  document.getElementById('resultScreen').classList.remove('active');
+  document.getElementById('startScreen').classList.add('active');
+  document.getElementById('teacherInput').focus();
+}
+</script>
+</body>
+</html>
