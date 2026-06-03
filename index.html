@@ -98,6 +98,18 @@
       padding:20px;
       z-index:1;
     }
+    .form-group{margin-bottom:14px}
+    .warning-box{
+      margin-top:16px;
+      padding:14px;
+      border:1px solid #f59e0b;
+      background:#fff7db;
+      border-left:5px solid #d97706;
+      border-radius:10px;
+      color:#713f12;
+      line-height:1.45;
+      font-size:14px;
+    }
     label{font-weight:bold;display:block;margin-bottom:8px}
     input[type="text"]{
       width:100%;
@@ -152,7 +164,7 @@
     }
     .quiz-top{
       display:grid;
-      grid-template-columns:1fr auto;
+      grid-template-columns:1fr auto auto;
       gap:12px;
       align-items:center;
       margin-bottom:12px;
@@ -167,6 +179,28 @@
       font-size:14px;
       color:#374151;
     }
+    .timer-box{
+      border:1px solid var(--borde);
+      background:white;
+      border-radius:12px;
+      padding:10px 14px;
+      text-align:center;
+      min-width:210px;
+      box-shadow:0 4px 14px rgba(15,23,42,.06);
+    }
+    .date-label{
+      font-size:12px;
+      color:#4b5563;
+      margin-bottom:4px;
+    }
+    .countdown{
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:1px;
+      color:var(--guinda);
+    }
+    .countdown.danger{color:var(--rojo);animation:pulseTimer 1s infinite}
+    @keyframes pulseTimer{50%{opacity:.45}}
     .bar{
       height:9px;
       background:#e5e7eb;
@@ -304,7 +338,7 @@
     }
     .result-score{
       display:grid;
-      grid-template-columns:repeat(3,1fr);
+      grid-template-columns:repeat(4,1fr);
       gap:14px;
       margin:16px 0 22px;
     }
@@ -372,9 +406,19 @@
             <div class="meta"><b>Fuentes de referencia:</b> Plan de Estudio 2022; Programa de Estudio para la Educación Secundaria: Programa Sintético de la Fase 6, SEP, 2024; evaluación formativa en la NEM; lineamientos y materiales de convivencia escolar. <br><b>Nivel:</b> dificultad alta, orientado al análisis de práctica docente.</div>
           </div>
           <div class="teacher-box">
-            <label for="teacherInput">Nombre del docente</label>
-            <input id="teacherInput" type="text" placeholder="Escriba su nombre completo" autocomplete="off" />
-            <p class="small">El nombre aparecerá en el resultado final del simulador.</p>
+            <h2 style="margin-top:0;color:var(--guinda);font-size:20px">Datos del participante</h2>
+            <div class="form-group">
+              <label for="curpInput">CURP</label>
+              <input id="curpInput" type="text" placeholder="Ingrese su CURP" maxlength="18" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,18)" />
+            </div>
+            <div class="form-group">
+              <label for="teacherInput">Nombre completo</label>
+              <input id="teacherInput" type="text" placeholder="Escriba su nombre completo" autocomplete="off" />
+            </div>
+            <div class="warning-box">
+              <b>Advertencia:</b> se tienen <b>25 minutos</b> para contestar todo el cuestionario. Al terminar el tiempo, el simulador se cerrará automáticamente y mostrará los resultados con el promedio final.
+            </div>
+            <p class="small">El CURP y el nombre aparecerán en el resultado final del simulador.</p>
             <button class="btn" style="width:100%;margin-top:14px" onclick="startQuiz()">Iniciar simulador</button>
           </div>
         </div>
@@ -385,8 +429,12 @@
     <section id="quizScreen" class="screen">
       <div class="quiz-top">
         <div class="teacher-name" id="teacherLabel"></div>
+        <div class="timer-box">
+          <div class="date-label" id="dateLabel">Fecha: --/--/----</div>
+          <div class="countdown" id="countdownLabel">25:00</div>
+        </div>
         <div class="progress-box">
-          <span id="progressText">Pregunta 1 de 33</span>
+          <span id="progressText">Pregunta 1 de 48</span>
           <div class="bar"><span id="progressBar"></span></div>
         </div>
       </div>
@@ -425,6 +473,7 @@
             <div class="stat"><span>Aciertos</span><b id="rightCount">0</b></div>
             <div class="stat"><span>Errores</span><b id="wrongCount">0</b></div>
             <div class="stat"><span>Porcentaje</span><b id="percentCount">0%</b></div>
+            <div class="stat"><span>Promedio</span><b id="averageCount">0.0</b></div>
           </div>
           <div id="finalMessage" class="intro-box"></div>
           <div id="categorySummary" class="intro-box" style="margin-top:14px"></div>
@@ -1806,10 +1855,15 @@ const questions = [
 
 let current = 0;
 let teacherName = "";
+let participantCurp = "";
 let selected = null;
 let answered = false;
 let results = [];
 let quizQuestions = [];
+let timerInterval = null;
+let timeRemaining = 25 * 60;
+let timeExpired = false;
+const QUIZ_TIME_SECONDS = 25 * 60;
 
 function shuffleArray(arr){
   const copy = [...arr];
@@ -1820,8 +1874,93 @@ function shuffleArray(arr){
   return copy;
 }
 
+
+function formatTime(seconds){
+  const safeSeconds = Math.max(0, seconds);
+  const minutes = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
+  const secs = (safeSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${secs}`;
+}
+
+function formatDateLabel(){
+  const now = new Date();
+  return now.toLocaleDateString('es-MX', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+}
+
+function updateTimerDisplay(){
+  const dateLabel = document.getElementById('dateLabel');
+  const countdownLabel = document.getElementById('countdownLabel');
+  if(dateLabel) dateLabel.textContent = 'Fecha: ' + formatDateLabel();
+  if(countdownLabel){
+    countdownLabel.textContent = formatTime(timeRemaining);
+    countdownLabel.classList.toggle('danger', timeRemaining <= 300);
+  }
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeRemaining = QUIZ_TIME_SECONDS;
+  timeExpired = false;
+  updateTimerDisplay();
+  timerInterval = setInterval(()=>{
+    timeRemaining--;
+    updateTimerDisplay();
+    if(timeRemaining <= 0){
+      clearInterval(timerInterval);
+      timeExpired = true;
+      showResults();
+    }
+  }, 1000);
+}
+
+function stopTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function getExtraContext(index){
+  const moment = [
+    'el grupo viene de Educación Física y algunos estudiantes están inquietos',
+    'la actividad ocurre en la segunda sesión del día, cuando la asistencia es irregular',
+    'la escuela prepara un periódico mural y el director pidió evidencias visibles',
+    'dos equipos comentan que prefieren usar hojas de color aunque no todos las tienen',
+    'el aula tiene ruido del patio y sólo funciona un ventilador',
+    'una parte del grupo solicita trabajar con ejemplos de redes sociales',
+    'el docente cuenta con poco tiempo antes del receso',
+    'la sesión coincide con una campaña escolar de limpieza',
+    'varios alumnos preguntan si la actividad contará para calificación',
+    'la jefa de grupo propone repartir tareas por rapidez',
+    'algunos estudiantes olvidaron libreta y piden trabajar de manera oral',
+    'la academia pidió conservar evidencias para el CTE'
+  ];
+  const detail = [
+    'también hay cartulinas, marcadores y una lista de asistencia incompleta',
+    'se mencionan ejemplos familiares, comentarios de pasillo y frases escuchadas en la comunidad',
+    'aparecen datos llamativos que no necesariamente modifican el propósito didáctico',
+    'varios equipos se preocupan más por el diseño que por la argumentación',
+    'hay estudiantes que terminan rápido y otros que requieren lectura acompañada',
+    'surgen anécdotas interesantes, pero no todas son evidencias suficientes para decidir',
+    'se mezclan opiniones personales, datos sin verificar y acuerdos de convivencia',
+    'algunos quieren usar el celular, aunque no todos tienen acceso o datos disponibles',
+    'el grupo pregunta si el producto debe ser bonito, extenso o útil para alguien',
+    'una madre de familia ofreció apoyar con material, pero no puede asistir a la escuela',
+    'el clima caluroso influye en la atención, aunque no cambia los criterios del PDA',
+    'los equipos piden instrucciones rápidas y algunos confunden metodología con producto final'
+  ];
+  return ` Como contexto adicional, ${moment[index % moment.length]}; ${detail[index % detail.length]}. Estos datos pueden orientar la organización, pero no sustituyen el análisis del contenido, el PDA, la intención pedagógica, la inclusión y la evaluación formativa.`;
+}
+
+function enrichQuestionContext(question, index){
+  return {...question, case: question.case + getExtraContext(index)};
+}
+
 function prepareQuiz(){
-  quizQuestions = shuffleArray(JSON.parse(JSON.stringify(questions)));
+  const baseQuestions = JSON.parse(JSON.stringify(questions)).map((q, idx)=>enrichQuestionContext(q, idx));
+  quizQuestions = shuffleArray(baseQuestions);
   quizQuestions = quizQuestions.map(q => ({...q, options: shuffleArray(q.options)}));
   current = 0;
   selected = null;
@@ -1830,17 +1969,26 @@ function prepareQuiz(){
 }
 
 function startQuiz(){
+  const curp = document.getElementById('curpInput').value.trim().toUpperCase();
   const name = document.getElementById('teacherInput').value.trim();
+  if(!curp || curp.length !== 18){
+    alert('Ingrese una CURP válida de 18 caracteres para iniciar.');
+    document.getElementById('curpInput').focus();
+    return;
+  }
   if(!name){
-    alert('Escriba el nombre del docente para iniciar.');
+    alert('Escriba el nombre completo para iniciar.');
     document.getElementById('teacherInput').focus();
     return;
   }
+  participantCurp = curp;
   teacherName = name;
   prepareQuiz();
   document.getElementById('startScreen').classList.remove('active');
   document.getElementById('quizScreen').classList.add('active');
-  document.getElementById('teacherLabel').textContent = 'Docente: ' + teacherName;
+  document.getElementById('resultScreen').classList.remove('active');
+  document.getElementById('teacherLabel').textContent = 'CURP: ' + participantCurp + ' · Nombre: ' + teacherName;
+  startTimer();
   renderQuestion();
 }
 
@@ -1873,6 +2021,7 @@ function renderQuestion(){
 }
 
 function checkAnswer(){
+  if(timeExpired) return;
   const marked = document.querySelector('input[name="answer"]:checked');
   if(!marked){
     alert('Seleccione una opción antes de comprobar.');
@@ -1894,7 +2043,7 @@ function checkAnswer(){
     fb.innerHTML = `<strong>Respuesta correcta.</strong>${op.feedback}<div class="source-note"><b>Orientación:</b> ${q.rightApproach}</div>`;
   }else{
     fb.className = 'feedback show bad';
-    fb.innerHTML = `<strong>Respuesta incorrecta.</strong>${op.feedback}<div class="source-note"><b>Cómo debería abordarse:</b> ${q.rightApproach}<br><b>Opción correcta:</b> ${q.options[correctIndex].text}</div>`;
+    fb.innerHTML = `<strong>Respuesta incorrecta.</strong>${op.feedback}<div class="source-note"><b>Cómo debería abordarse:</b> ${q.rightApproach}</div>`;
   }
   results[current] = {correct:op.correct, selected:selected, correctIndex:correctIndex};
   answered = true;
@@ -1904,6 +2053,7 @@ function checkAnswer(){
 }
 
 function nextQuestion(){
+  if(timeExpired) return;
   if(!answered) return;
   if(current < quizQuestions.length - 1){
     current++;
@@ -1914,22 +2064,28 @@ function nextQuestion(){
 }
 
 function showResults(){
+  stopTimer();
   document.getElementById('quizScreen').classList.remove('active');
+  document.getElementById('startScreen').classList.remove('active');
   document.getElementById('resultScreen').classList.add('active');
   const right = results.filter(r=>r && r.correct).length;
   const wrong = quizQuestions.length - right;
   const percent = Math.round((right / quizQuestions.length) * 100);
-  document.getElementById('resultTeacher').textContent = 'Docente: ' + teacherName;
+  const average = ((right / quizQuestions.length) * 10).toFixed(1);
+  const elapsed = formatTime(QUIZ_TIME_SECONDS - Math.max(timeRemaining, 0));
+  document.getElementById('resultTeacher').textContent = 'CURP: ' + participantCurp + ' · Nombre: ' + teacherName + ' · Fecha: ' + formatDateLabel() + ' · Tiempo utilizado: ' + elapsed;
   document.getElementById('rightCount').textContent = right;
   document.getElementById('wrongCount').textContent = wrong;
   document.getElementById('percentCount').textContent = percent + '%';
+  document.getElementById('averageCount').textContent = average;
   const msg = document.getElementById('finalMessage');
   let level = '';
   if(percent >= 90) level = 'Excelente dominio de criterios didácticos, metodológicos y de evaluación para Español Fase 6.';
   else if(percent >= 75) level = 'Buen avance. Conviene reforzar evaluación formativa, inclusión y contextualización de situaciones didácticas.';
   else if(percent >= 60) level = 'Resultado suficiente. Se recomienda revisar con mayor detalle el Programa Sintético y fortalecer la toma de decisiones ante casos de aula.';
   else level = 'Resultado en proceso. Es recomendable estudiar el enfoque de la NEM, la lectura de la realidad, la evaluación formativa y los contenidos de Español Fase 6.';
-  msg.innerHTML = `<h2>Valoración general</h2><p><b>Calificación:</b> ${percent}/100.</p><p>${level}</p><p><b>Recomendación:</b> revise las preguntas con error y vuelva a resolver el simulador, enfocándose en justificar cada decisión desde el contexto del grupo y el propósito comunicativo del aprendizaje.</p>`;
+  const timeMessage = timeExpired ? '<p><b>Observación:</b> el tiempo de 25 minutos se agotó; las preguntas no respondidas se contabilizaron como error.</p>' : '<p><b>Observación:</b> el cuestionario fue concluido antes de que terminara el tiempo.</p>';
+  msg.innerHTML = `<h2>Valoración general</h2><p><b>Calificación:</b> ${percent}/100. <b>Promedio:</b> ${average}/10.</p><p>${level}</p>${timeMessage}<p><b>Recomendación:</b> revise las preguntas con error y vuelva a resolver el simulador, enfocándose en justificar cada decisión desde el contexto del grupo y el propósito comunicativo del aprendizaje.</p>`;
   const categoryBox = document.getElementById('categorySummary');
   const categoryStats = {};
   quizQuestions.forEach((q,idx)=>{
@@ -1943,12 +2099,14 @@ function showResults(){
   const review = document.getElementById('reviewBox');
   review.innerHTML = '';
   quizQuestions.forEach((q,idx)=>{
-    const r = results[idx];
+    const fallbackCorrectIndex = q.options.findIndex(o=>o.correct);
+    const r = results[idx] || {correct:false, selected:null, correctIndex:fallbackCorrectIndex, unanswered:true};
+    const selectedText = r.selected === null ? 'Sin responder por tiempo agotado' : q.options[r.selected].text;
     const div = document.createElement('div');
     div.className = 'review-item ' + (r.correct ? 'ok':'fail');
     div.innerHTML = `<h3>Pregunta ${idx+1}: ${r.correct ? 'Correcta' : 'Incorrecta'}</h3>
       <p><b>Aspecto:</b> ${q.focus.replace('Aspecto: ','')}</p>
-      <p><b>Respuesta marcada:</b> ${q.options[r.selected].text}</p>
+      <p><b>Respuesta marcada:</b> ${selectedText}</p>
       ${!r.correct ? `<p><b>Respuesta correcta:</b> ${q.options[r.correctIndex].text}</p>` : ''}
       <p><b>Orientación:</b> ${q.rightApproach}</p>`;
     review.appendChild(div);
@@ -1956,13 +2114,19 @@ function showResults(){
 }
 
 function restartQuiz(){
+  stopTimer();
   current = 0;
   selected = null;
   answered = false;
   results = [];
+  quizQuestions = [];
+  timeRemaining = QUIZ_TIME_SECONDS;
+  timeExpired = false;
+  updateTimerDisplay();
   document.getElementById('resultScreen').classList.remove('active');
+  document.getElementById('quizScreen').classList.remove('active');
   document.getElementById('startScreen').classList.add('active');
-  document.getElementById('teacherInput').focus();
+  document.getElementById('curpInput').focus();
 }
 </script>
 </body>
